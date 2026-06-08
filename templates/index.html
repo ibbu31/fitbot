@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBot - AI Fitness Coach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>🏋️ FitBot</h1>
+        <p>Your Personal AI Fitness Coach</p>
+    </div>
+
+    <!-- Chat Box -->
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+            <!-- Messages appear here -->
+            <div class="message bot-message">
+                👋 Hey! I am FitBot, your personal AI fitness coach. Ask me anything about workouts, nutrition, or fitness goals!
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="user-input" 
+                placeholder="Ask me about workouts, diet, fitness goals..." 
+                onkeypress="handleKey(event)"
+            />
+            <button onclick="sendMessage()">Send 💪</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
