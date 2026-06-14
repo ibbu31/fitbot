@@ -10,28 +10,50 @@
 
     <!-- Header -->
     <div class="header">
-        <h1>🏋️ FitBot</h1>
+        <h1>🏋️ Fit<span>Bot</span></h1>
         <p>Your Personal AI Fitness Coach</p>
     </div>
 
-    <!-- Chat Box -->
+    <!-- Chat Container -->
     <div class="chat-container">
+
+        <!-- Chat Box -->
         <div class="chat-box" id="chat-box">
-            <!-- Messages appear here -->
             <div class="message bot-message">
-                👋 Hey! I am FitBot, your personal AI fitness coach. Ask me anything about workouts, nutrition, or fitness goals!
+                👋 Hey! I am FitBot, your personal AI fitness coach. Type, speak 🎤, or show me a photo 📸 of your food or exercise!
             </div>
+        </div>
+
+        <!-- Image Preview -->
+        <div id="image-preview-container" style="display:none; padding: 10px; background:#111;">
+            <img id="image-preview" style="max-width: 200px; border-radius: 10px;"/>
+            <button onclick="clearImage()" style="margin-left:10px; background:#ff1e1e; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer;">❌ Remove</button>
         </div>
 
         <!-- Input Area -->
         <div class="input-area">
+
+            <!-- Camera Button -->
+            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)"/>
+            <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
+
+            <!-- Text Input -->
             <input 
                 type="text" 
                 id="user-input" 
-                placeholder="Ask me about workouts, diet, fitness goals..." 
+                placeholder="Type, speak 🎤 or send a photo 📸..." 
                 onkeypress="handleKey(event)"
             />
-            <button onclick="sendMessage()">Send 💪</button>
+
+            <!-- Mic Button -->
+            <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
+
+            <!-- Voice Toggle Button -->
+            <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice ON">🔊</button>
+
+            <!-- Send Button -->
+            <button class="send-btn" onclick="sendMessage()">Send 💪</button>
+
         </div>
     </div>
 
