@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBot - Exercise Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+        body {
+            background: #000a1e;
+            min-height: 100vh;
+            color: white;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 10, 30, 0.93);
+            z-index: 0;
+        }
+        .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,120,255,0.2); }
+        .header h1 { font-size: 1.5rem; font-weight: 900; }
+        .header h1 span { color: #0078ff; }
+        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #0078ff; color: #0078ff; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
+        .back-btn:hover { background: #0078ff; color: white; }
+
+        /* Category tabs */
+        .category-section { margin-bottom: 32px; }
+        .category-title { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 4px; padding: 12px 0 8px; border-bottom: 2px solid #0078ff; display: flex; align-items: center; gap: 8px; }
+        .category-subtitle { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 16px; }
+
+        /* Filter tabs */
+        .filter-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; overflow-x: auto; padding-bottom: 4px; }
+        .filter-btn { padding: 8px 18px; border-radius: 25px; border: 1px solid rgba(0,120,255,0.2); background: transparent; color: rgba(255,255,255,0.6); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+        .filter-btn:hover, .filter-btn.active { background: #0078ff; border-color: #0078ff; color: white; }
+
+        /* Search */
+        .search-bar { margin-bottom: 20px; }
+        .search-input { width: 100%; padding: 12px 20px; background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.2); border-radius: 25px; color: white; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
+        .search-input:focus { border-color: #0078ff; }
+        .search-input::placeholder { color: rgba(255,255,255,0.3); }
+
+        /* Exercise grid */
+        .exercise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+        /* Exercise card */
+        .exercise-card {
+            background: rgba(0,5,20,0.95);
+            border: 1px solid rgba(0,120,255,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .exercise-card:hover {
+            border-color: #0078ff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 24px rgba(0,120,255,0.2);
+        }
+
+        .anim-box {
+            height: 140px;
+            background: rgba(0,120,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid rgba(0,120,255,0.08);
+        }
+
+        .tag-diff {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tag-muscle {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 3px 8px;
+            background: rgba(0,120,255,0.15);
+            border: 1px solid rgba(0,120,255,0.3);
+            border-radius: 20px;
+            font-size: 0.65rem;
+            color: #0078ff;
+            text-transform: uppercase;
+        }
+        .diff-beginner { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .diff-intermediate { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .diff-advanced { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+        .card-info { padding: 14px; }
+        .card-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .card-desc { font-size: 0.78rem; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 10px; }
+        .card-stats { display: flex; gap: 12px; margin-bottom: 10px; }
+        .card-stat { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
+        .card-stat span { color: #0078ff; font-weight: 600; }
+        .view-btn { width: 100%; padding: 8px; background: rgba(0,120,255,0.08); border: 1px solid rgba(0,120,255,0.25); color: #0078ff; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .view-btn:hover { background: #0078ff; color: white; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,20,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: rgba(0,5,20,0.99); border: 1px solid rgba(0,120,255,0.3); border-radius: 20px; padding: 28px; max-width: 560px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 1.4rem; cursor: pointer; }
+        .modal-close:hover { color: white; }
+        .modal-anim { height: 160px; background: rgba(0,120,255,0.04); border-radius: 12px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,120,255,0.1); }
+        .modal-name { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+        .modal-tags { display: flex; gap: 8px; margin-bottom: 14px; }
+        .modal-desc { color: rgba(255,255,255,0.5); font-size: 0.85rem; line-height: 1.6; margin-bottom: 18px; }
+        .steps-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0078ff; margin-bottom: 12px; }
+        .step-item { display: flex; gap: 12px; margin-bottom: 10px; }
+        .step-num { width: 22px; height: 22px; min-width: 22px; background: #0078ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .step-text { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
+        .modal-ask-btn { width: 100%; padding: 12px; background: #0078ff; color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 18px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-ask-btn:hover { background: #0060cc; }
+
+        /* No results */
+        .no-results { text-align: center; padding: 40px; color: rgba(255,255,255,0.3); }
+
+        @media (max-width: 600px) {
+            .exercise-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 400px) {
+            .exercise-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <div class="header">
+        <h1>🏋️ Fit<span>Bot</span> Exercise Library</h1>
+        <a href="/" class="back-btn">← Back to Chat</a>
+    </div>
+
+    <div class="search-bar">
+        <input class="search-input" id="search-input" placeholder="🔍 Search exercises, muscles, or workout type..." oninput="renderAll()"/>
+    </div>
+
+    <div class="filter-row" id="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('push', this)">💪 Push</button>
+        <button class="filter-btn" onclick="setFilter('pull', this)">🔙 Pull</button>
+        <button class="filter-btn" onclick="setFilter('legs', this)">🦵 Legs</button>
+        <button class="filter-btn" onclick="setFilter('upper', this)">⬆️ Upper Body</button>
+        <button class="filter-btn" onclick="setFilter('lower', this)">⬇️ Lower Body</button>
+        <button class="filter-btn" onclick="setFilter('full', this)">🔥 Full Body</button>
+        <button class="filter-btn" onclick="setFilter('chest', this)">Chest</button>
+        <button class="filter-btn" onclick="setFilter('back', this)">Back</button>
+        <button class="filter-btn" onclick="setFilter('shoulders', this)">Shoulders</button>
+        <button class="filter-btn" onclick="setFilter('biceps', this)">Biceps</button>
+        <button class="filter-btn" onclick="setFilter('triceps', this)">Triceps</button>
+        <button class="filter-btn" onclick="setFilter('core', this)">Core</button>
+        <button class="filter-btn" onclick="setFilter('cardio', this)">Cardio</button>
+    </div>
+
+    <div id="exercises-container"></div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-anim" id="modal-anim"></div>
+        <div class="modal-name" id="modal-name"></div>
+        <div class="modal-tags" id="modal-tags"></div>
+        <div class="modal-desc" id="modal-desc"></div>
+        <div class="steps-title">How to do it</div>
+        <div id="modal-steps"></div>
+        <button class="modal-ask-btn" id="modal-ask-btn">💬 Ask FitBot to build a plan with this exercise</button>
+    </div>
+</div>
+
+<script>
+const EXERCISES = [
+    // ========== PUSH WORKOUT ==========
+    { id:1, name:"Push Up", group:"push", muscle:"chest", difficulty:"beginner", sets:"3-4", reps:"10-15", emoji:"💪",
+      desc:"Classic upper body push exercise targeting chest, shoulders and triceps.",
+      steps:["Start in a high plank with hands shoulder-width apart","Lower your chest toward the floor keeping body straight","Push back up by fully extending your arms","Keep your core tight and don't let hips sag","Breathe in going down, breathe out going up"] },
+    { id:2, name:"Bench Press", group:"push", muscle:"chest", difficulty:"intermediate", sets:"4", reps:"8-10", emoji:"🏋️",
+      desc:"King of chest exercises using a barbell or dumbbells.",
+      steps:["Lie on bench with feet flat on floor","Grip bar slightly wider than shoulder width","Lower bar to mid-chest with control","Keep wrists straight and elbows at 45°","Press bar up to starting position"] },
+    { id:3, name:"Overhead Press", group:"push", muscle:"shoulders", difficulty:"intermediate", sets:"3-4", reps:"8-10", emoji:"💪",
+      desc:"Compound shoulder exercise pressing weight overhead.",
+      steps:["Stand with feet shoulder-width apart","Hold barbell at shoulder height","Press the bar straight up overhead","Fully extend arms at the top","Lower back to shoulders with control"] },
+    { id:4, name:"Dumbbell Fly", group:"push", muscle:"chest", difficulty:"beginner", sets:"3", reps:"12", emoji:"🏋️",
+      desc:"Isolation movement that stretches and contracts the chest.",
+      steps:["Lie on bench holding dumbbells above chest","Slightly bend elbows throughout the movement","Lower weights out to sides in wide arc","Feel the chest stretch at the bottom","Bring weights back up squeezing chest"] },
+    { id:5, name:"Lateral Raise", group:"push", muscle:"shoulders", difficulty:"beginner", sets:"3", reps:"12-15", emoji:"💪",
+      desc:"Isolation exercise for the side deltoids.",
+      steps:["Stand holding light dumbbells at sides","Keep a slight bend in your elbows","Raise arms to the side up to shoulder height","Pause briefly at the top","Lower slowly with control"] },
+    { id:6, name:"Tricep Dip", group:"push", muscle:"triceps", difficulty:"beginner", sets:"3", reps:"12-15", emoji:"💪",
+      desc:"Bodyweight tricep exercise using a bench or chair.",
+      steps:["Sit on edge of bench with hands beside hips","Slide hips off and lower your body","Bend elbows to lower toward the floor","Keep elbows pointing back not flaring out","Push back up to starting position"] },
+    { id:7, name:"Tricep Pushdown", group:"push", muscle:"triceps", difficulty:"beginner", sets:"3", reps:"12-15", emoji:"💪",
+      desc:"Cable isolation exercise for triceps.",
+      steps:["Stand at cable machine with rope attachment","Keep upper arms pinned to your sides","Push the rope down and slightly outward","Fully extend arms at the bottom","Return slowly to starting position"] },
+    { id:8, name:"Incline Push Up", group:"push", muscle:"chest", difficulty:"beginner", sets:"3", reps:"12-15", emoji:"💪",
+      desc:"Easier push up variation targeting upper chest.",
+      steps:["Place hands on elevated surface like bench","Keep body in a straight line","Lower chest toward the surface","Push back up explosively","Great for beginners building chest strength"] },
+
+    // ========== PULL WORKOUT ==========
+    { id:9, name:"Pull Up", group:"pull", muscle:"back", difficulty:"intermediate", sets:"3-4", reps:"6-10", emoji:"🏋️",
+      desc:"Best bodyweight exercise for back and biceps.",
+      steps:["Hang from bar with hands slightly wider than shoulders","Pull chest toward the bar squeezing your back","Drive elbows down and back as you pull","Pause when chin is above the bar","Lower yourself slowly with full control"] },
+    { id:10, name:"Bent Over Row", group:"pull", muscle:"back", difficulty:"intermediate", sets:"4", reps:"10", emoji:"🏋️",
+      desc:"Compound pulling movement for full back thickness.",
+      steps:["Hinge at hips holding barbell with overhand grip","Keep back flat and parallel to floor","Pull bar to lower chest squeezing shoulder blades","Hold for 1 second at the top","Lower bar under control"] },
+    { id:11, name:"Bicep Curl", group:"pull", muscle:"biceps", difficulty:"beginner", sets:"3", reps:"12", emoji:"💪",
+      desc:"Classic isolation exercise for biceps peak.",
+      steps:["Stand holding dumbbells at sides palms forward","Keep upper arms still against torso","Curl weights toward shoulders","Squeeze biceps hard at the top","Lower slowly to full extension"] },
+    { id:12, name:"Hammer Curl", group:"pull", muscle:"biceps", difficulty:"beginner", sets:"3", reps:"12", emoji:"💪",
+      desc:"Neutral grip curl targeting brachialis and forearms.",
+      steps:["Hold dumbbells with palms facing each other","Keep upper arms still at sides","Curl weights toward shoulders","Maintain neutral wrist position throughout","Lower with control to starting position"] },
+    { id:13, name:"Face Pull", group:"pull", muscle:"back", difficulty:"beginner", sets:"3", reps:"15", emoji:"💪",
+      desc:"Rear delt and rotator cuff health exercise.",
+      steps:["Set cable at face height with rope attachment","Grab rope with both hands palms facing in","Pull rope toward your face separating hands","Externally rotate shoulders at the end","Return slowly with control"] },
+    { id:14, name:"Lat Pulldown", group:"pull", muscle:"back", difficulty:"beginner", sets:"3-4", reps:"10-12", emoji:"🏋️",
+      desc:"Cable machine alternative to pull ups for back width.",
+      steps:["Sit at lat pulldown machine","Grab bar wider than shoulder width","Pull bar down to upper chest","Squeeze lats and shoulder blades together","Slowly return bar to top position"] },
+    { id:15, name:"Cable Row", group:"pull", muscle:"back", difficulty:"beginner", sets:"3-4", reps:"12", emoji:"🏋️",
+      desc:"Seated cable row for mid-back thickness.",
+      steps:["Sit at cable row machine with slight knee bend","Grab handle with both hands","Pull handle to lower chest","Squeeze shoulder blades together at end","Extend arms slowly back to start"] },
+
+    // ========== LEGS WORKOUT ==========
+    { id:16, name:"Squat", group:"legs", muscle:"legs", difficulty:"beginner", sets:"4", reps:"12-15", emoji:"🦵",
+      desc:"King of leg exercises. Works entire lower body.",
+      steps:["Stand feet shoulder-width apart toes slightly out","Push hips back and bend knees simultaneously","Lower until thighs are parallel to floor","Keep chest up and knees over toes","Drive through heels to stand back up"] },
+    { id:17, name:"Deadlift", group:"legs", muscle:"legs", difficulty:"advanced", sets:"4-5", reps:"5-8", emoji:"🏋️",
+      desc:"King of all lifts. Works entire posterior chain.",
+      steps:["Stand with feet hip-width apart bar over mid-foot","Hinge at hips grab bar outside your legs","Brace core hard and take deep breath","Push floor away keeping bar close to body","Lock out hips and shoulders at the top"] },
+    { id:18, name:"Lunge", group:"legs", muscle:"legs", difficulty:"beginner", sets:"3", reps:"12 each", emoji:"🦵",
+      desc:"Unilateral leg exercise for balance and quad strength.",
+      steps:["Stand tall feet hip-width apart","Step forward about 2 feet with one foot","Lower back knee toward the floor","Front knee should stay over ankle","Push through front heel to return to standing"] },
+    { id:19, name:"Romanian Deadlift", group:"legs", muscle:"legs", difficulty:"intermediate", sets:"3-4", reps:"10-12", emoji:"🦵",
+      desc:"Hip hinge movement targeting hamstrings and glutes.",
+      steps:["Hold barbell at hip height feet hip-width apart","Push hips back while lowering bar down legs","Keep back flat and bar close to shins","Lower until you feel hamstring stretch","Drive hips forward to return to standing"] },
+    { id:20, name:"Leg Press", group:"legs", muscle:"legs", difficulty:"beginner", sets:"4", reps:"12-15", emoji:"🦵",
+      desc:"Machine exercise for quads hamstrings and glutes.",
+      steps:["Sit in leg press machine feet hip-width apart","Lower the weight by bending knees to 90°","Keep back flat against the pad","Press through heels to extend legs","Do not lock knees fully at the top"] },
+    { id:21, name:"Calf Raise", group:"legs", muscle:"legs", difficulty:"beginner", sets:"4", reps:"20", emoji:"🦵",
+      desc:"Isolation exercise for calf muscles.",
+      steps:["Stand with toes on edge of step or platform","Hold something for balance if needed","Raise up onto toes as high as possible","Hold at the top for 1 second","Lower heels below platform level for full stretch"] },
+    { id:22, name:"Glute Bridge", group:"legs", muscle:"legs", difficulty:"beginner", sets:"3", reps:"15-20", emoji:"🦵",
+      desc:"Hip extension exercise targeting glutes.",
+      steps:["Lie on back knees bent feet flat on floor","Place feet hip-width apart close to hips","Drive hips up squeezing glutes hard","Body should form straight line from knees to shoulders","Hold at top then lower with control"] },
+
+    // ========== UPPER BODY ==========
+    { id:23, name:"Arnold Press", group:"upper", muscle:"shoulders", difficulty:"intermediate", sets:"3", reps:"10-12", emoji:"💪",
+      desc:"Full shoulder exercise hitting all three deltoid heads.",
+      steps:["Start with dumbbells at shoulder height palms facing you","Rotate palms outward as you press up","Fully extend arms overhead at top","Reverse the rotation as you lower","Start with lighter weight to learn movement"] },
+    { id:24, name:"Upright Row", group:"upper", muscle:"shoulders", difficulty:"intermediate", sets:"3", reps:"12", emoji:"💪",
+      desc:"Compound exercise for shoulders and upper traps.",
+      steps:["Hold barbell or dumbbells with overhand grip","Lift weight straight up toward chin","Lead with your elbows keeping them high","Bar should reach just below chin","Lower slowly to starting position"] },
+    { id:25, name:"Chest Dip", group:"upper", muscle:"chest", difficulty:"intermediate", sets:"3-4", reps:"10-12", emoji:"💪",
+      desc:"Compound push movement for lower chest and triceps.",
+      steps:["Grip parallel bars and lift yourself up","Lean slightly forward for more chest activation","Lower your body by bending elbows","Go down until shoulders are below elbows","Push back up to starting position"] },
+    { id:26, name:"Cable Crossover", group:"upper", muscle:"chest", difficulty:"intermediate", sets:"3", reps:"12-15", emoji:"🏋️",
+      desc:"Cable fly movement for chest peak and definition.",
+      steps:["Set cables at shoulder height on both sides","Stand in middle holding both handles","Step forward with one foot for stability","Bring handles together in front of chest","Return slowly fighting the resistance"] },
+
+    // ========== LOWER BODY ==========
+    { id:27, name:"Hip Thrust", group:"lower", muscle:"legs", difficulty:"beginner", sets:"4", reps:"15", emoji:"🦵",
+      desc:"Best exercise for glute activation and strength.",
+      steps:["Sit with upper back against bench knees bent","Place barbell across hips and hold in place","Drive hips up until body is parallel to floor","Squeeze glutes hard at the top","Lower hips back toward floor with control"] },
+    { id:28, name:"Step Up", group:"lower", muscle:"legs", difficulty:"beginner", sets:"3", reps:"12 each", emoji:"🦵",
+      desc:"Functional unilateral leg exercise for balance.",
+      steps:["Stand in front of a bench or box","Step up with one foot placing it fully on surface","Drive through that heel to bring body up","Step back down with control","Complete all reps on one leg then switch"] },
+    { id:29, name:"Sumo Squat", group:"lower", muscle:"legs", difficulty:"beginner", sets:"3", reps:"15", emoji:"🦵",
+      desc:"Wide stance squat variation targeting inner thighs and glutes.",
+      steps:["Stand with feet wider than shoulder-width","Point toes outward about 45 degrees","Lower into squat keeping chest tall","Knees should track over toes throughout","Drive through heels to stand up"] },
+    { id:30, name:"Good Morning", group:"lower", muscle:"legs", difficulty:"intermediate", sets:"3", reps:"12", emoji:"🦵",
+      desc:"Hip hinge for hamstrings and lower back strength.",
+      steps:["Place barbell on upper back like a squat","Keep slight bend in knees throughout","Hinge forward at hips keeping back flat","Lower torso until parallel to floor","Drive hips forward to return upright"] },
+
+    // ========== FULL BODY ==========
+    { id:31, name:"Burpee", group:"full", muscle:"cardio", difficulty:"intermediate", sets:"3-4", reps:"10-12", emoji:"🔥",
+      desc:"Full body explosive exercise combining strength and cardio.",
+      steps:["Stand with feet shoulder-width apart","Drop into squat placing hands on floor","Jump feet back into plank position","Perform a push up (optional)","Jump feet forward then explode up with arms overhead"] },
+    { id:32, name:"Kettlebell Swing", group:"full", muscle:"legs", difficulty:"intermediate", sets:"4", reps:"15-20", emoji:"🏋️",
+      desc:"Dynamic hip hinge movement for power and conditioning.",
+      steps:["Stand feet hip-width apart kettlebell on floor","Hinge at hips and grab the kettlebell handle","Drive hips forward explosively","Let the bell swing to chest height","Guide it back between legs and repeat in fluid motion"] },
+    { id:33, name:"Man Maker", group:"full", muscle:"chest", difficulty:"advanced", sets:"3", reps:"8", emoji:"🔥",
+      desc:"Ultimate full body exercise combining row push up and squat.",
+      steps:["Start in plank position holding dumbbells","Perform a push up","Row right dumbbell to hip","Row left dumbbell to hip","Jump feet to hands then stand and press overhead"] },
+    { id:34, name:"Thruster", group:"full", muscle:"shoulders", difficulty:"advanced", sets:"4", reps:"10", emoji:"🔥",
+      desc:"Front squat into overhead press combo for full body power.",
+      steps:["Hold barbell at shoulder height in front rack","Perform a full depth front squat","As you stand use momentum to press bar overhead","Fully extend arms at the top","Lower bar back to shoulders as you descend"] },
+
+    // ========== CORE ==========
+    { id:35, name:"Plank", group:"full", muscle:"core", difficulty:"beginner", sets:"3", reps:"30-60s", emoji:"🏋️",
+      desc:"Fundamental core stability exercise.",
+      steps:["Start on forearms and toes","Keep body in straight line from head to heels","Engage core by pulling belly button to spine","Keep hips level don't let them sag","Hold the position breathing steadily"] },
+    { id:36, name:"Crunch", group:"full", muscle:"core", difficulty:"beginner", sets:"3", reps:"20", emoji:"💪",
+      desc:"Classic abdominal isolation exercise.",
+      steps:["Lie on back with knees bent feet flat","Place hands behind head lightly","Curl upper body toward knees","Focus on squeezing abs not pulling neck","Lower back down with control"] },
+    { id:37, name:"Russian Twist", group:"full", muscle:"core", difficulty:"beginner", sets:"3", reps:"20", emoji:"💪",
+      desc:"Rotational core exercise for obliques.",
+      steps:["Sit on floor knees bent feet elevated","Lean back slightly keeping back straight","Hold hands together or hold weight","Rotate torso right then left","Each side counts as one rep"] },
+    { id:38, name:"Mountain Climber", group:"full", muscle:"core", difficulty:"intermediate", sets:"3", reps:"20 each", emoji:"🏃",
+      desc:"Dynamic core exercise that also raises heart rate.",
+      steps:["Start in a high plank position","Drive one knee toward your chest","Quickly switch legs in a running motion","Keep your hips level throughout","Maintain steady breathing rhythm"] },
+
+    // ========== CARDIO ==========
+    { id:39, name:"Jumping Jack", group:"full", muscle:"cardio", difficulty:"beginner", sets:"3", reps:"30", emoji:"⚡",
+      desc:"Classic full body warm up and cardio exercise.",
+      steps:["Stand with feet together arms at sides","Jump and spread feet wider than shoulder-width","Raise arms above head at the same time","Jump back to starting position","Repeat at steady pace"] },
+    { id:40, name:"Box Jump", group:"full", muscle:"legs", difficulty:"intermediate", sets:"4", reps:"8-10", emoji:"⚡",
+      desc:"Explosive plyometric exercise for lower body power.",
+      steps:["Stand in front of a box or platform","Bend knees and swing arms back","Explode upward landing softly on box","Stand tall on the box fully","Step down carefully and repeat"] },
+];
+
+const CATEGORIES = [
+    { key:"push", label:"💪 Push Workout", desc:"Chest, shoulders, triceps — all pushing movements" },
+    { key:"pull", label:"🔙 Pull Workout", desc:"Back and biceps — all pulling movements" },
+    { key:"legs", label:"🦵 Legs Workout", desc:"Quads, hamstrings, glutes, calves" },
+    { key:"upper", label:"⬆️ Upper Body", desc:"Complete upper body compound movements" },
+    { key:"lower", label:"⬇️ Lower Body", desc:"Complete lower body power movements" },
+    { key:"full", label:"🔥 Full Body & Core & Cardio", desc:"Total body conditioning and core strength" },
+];
+
+let activeFilter = 'all';
+
+function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAll();
+}
+
+function getAnimation(ex) {
+    const anims = {
+        push: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pu 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="18" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="26" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="38" x2="28" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="38" x2="72" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="85" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="85" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}</style></svg>`,
+        pull: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#0078ff" stroke-width="3" opacity=".5"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="28" r="8" fill="#0078ff" opacity=".8"/><line x1="45" y1="8" x2="35" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="55" y1="8" x2="65" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="50" y2="70" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="48" x2="30" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="48" x2="70" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="70" x2="38" y2="98" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="70" x2="62" y2="98" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-18px)}100%{transform:translateY(0)}}</style></svg>`,
+        legs: `<svg width="100" height="110" viewBox="0 0 100 110"><g style="animation:sq 1.5s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="35" x2="28" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="35" x2="72" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="55" x2="35" y2="82" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="55" x2="65" y2="82" stroke="#0078ff" stroke-width="2.5"/><line x1="35" y1="82" x2="30" y2="100" stroke="#0078ff" stroke-width="2.5"/><line x1="65" y1="82" x2="70" y2="100" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes sq{0%{transform:scaleY(1)}50%{transform:scaleY(.72) translateY(12px)}100%{transform:scaleY(1)}}</style></svg>`,
+        cardio: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:rn .8s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="24" y2="26" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="72" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="28" y2="88" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="68" y2="84" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes rn{0%{transform:translateX(-6px) rotate(-4deg)}50%{transform:translateX(6px) rotate(4deg)}100%{transform:translateX(-6px) rotate(-4deg)}}</style></svg>`,
+        core: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pl 2s ease-in-out infinite"><circle cx="80" cy="22" r="8" fill="#0078ff" opacity=".8"/><line x1="72" y1="28" x2="20" y2="42" stroke="#0078ff" stroke-width="2.5"/><line x1="60" y1="32" x2="55" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="60" y1="32" x2="68" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="20" y1="42" x2="12" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="20" y1="42" x2="25" y2="62" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pl{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}</style></svg>`,
+        shoulders: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:op 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="16" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="24" x2="50" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="18" y2="28" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="82" y2="28" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="60" x2="38" y2="88" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="60" x2="62" y2="88" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes op{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}</style></svg>`,
+        biceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><g style="animation:cl 1.5s ease-in-out infinite;transform-origin:28px 46px"><line x1="50" y1="36" x2="28" y2="46" stroke="#0078ff" stroke-width="2.5"/><line x1="28" y1="46" x2="18" y2="28" stroke="#0078ff" stroke-width="2.5"/></g><line x1="50" y1="36" x2="72" y2="50" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="86" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#0078ff" stroke-width="2.5"/><style>@keyframes cl{0%{transform:rotate(0deg)}50%{transform:rotate(-48deg)}100%{transform:rotate(0deg)}}</style></svg>`,
+        triceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="28" y2="50" stroke="#0078ff" stroke-width="2.5"/><g style="animation:tr 1.5s ease-in-out infinite;transform-origin:72px 36px"><line x1="50" y1="36" x2="72" y2="36" stroke="#0078ff" stroke-width="2.5"/><line x1="72" y1="36" x2="72" y2="62" stroke="#0078ff" stroke-width="2.5"/></g><line x1="50" y1="58" x2="38" y2="86" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#0078ff" stroke-width="2.5"/><style>@keyframes tr{0%{transform:rotate(0deg)}50%{transform:rotate(35deg)}100%{transform:rotate(0deg)}}</style></svg>`,
+        back: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#0078ff" stroke-width="3" opacity=".4"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="26" r="8" fill="#0078ff" opacity=".8"/><line x1="44" y1="8" x2="34" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="56" y1="8" x2="66" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="34" x2="50" y2="68" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="46" x2="28" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="46" x2="72" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="68" x2="38" y2="96" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="68" x2="62" y2="96" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-16px)}100%{transform:translateY(0)}}</style></svg>`,
+    };
+    const map = {chest:'push',back:'back',shoulders:'shoulders',biceps:'biceps',triceps:'triceps',legs:'legs',core:'core',cardio:'cardio'};
+    const key = map[ex.muscle] || 'push';
+    return anims[key] || `<div style="font-size:3rem;">${ex.emoji}</div>`;
+}
+
+function renderAll() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const container = document.getElementById('exercises-container');
+
+    if (activeFilter !== 'all') {
+        const filtered = EXERCISES.filter(ex => {
+            const matchFilter = ex.group === activeFilter || ex.muscle === activeFilter;
+            const matchSearch = !search || ex.name.toLowerCase().includes(search) || ex.muscle.includes(search) || ex.desc.toLowerCase().includes(search);
+            return matchFilter && matchSearch;
+        });
+        container.innerHTML = filtered.length === 0
+            ? '<div class="no-results">No exercises found. Try a different search.</div>'
+            : `<div class="exercise-grid">${filtered.map(renderCard).join('')}</div>`;
+        return;
+    }
+
+    let html = '';
+    CATEGORIES.forEach(cat => {
+        let list = EXERCISES.filter(ex => {
+            const matchCat = ex.group === cat.key;
+            const matchSearch = !search || ex.name.toLowerCase().includes(search) || ex.desc.toLowerCase().includes(search);
+            return matchCat && matchSearch;
+        });
+        if (list.length === 0) return;
+        html += `
+            <div class="category-section">
+                <div class="category-title">${cat.label}</div>
+                <div class="category-subtitle">${cat.desc}</div>
+                <div class="exercise-grid">${list.map(renderCard).join('')}</div>
+            </div>`;
+    });
+
+    if (!html) html = '<div class="no-results">No exercises found. Try a different search.</div>';
+    container.innerHTML = html;
+}
+
+function renderCard(ex) {
+    return `
+        <div class="exercise-card" onclick="openModal(${ex.id})">
+            <div class="anim-box">
+                ${getAnimation(ex)}
+                <span class="tag-diff diff-${ex.difficulty}">${ex.difficulty}</span>
+                <span class="tag-muscle">${ex.muscle}</span>
+            </div>
+            <div class="card-info">
+                <div class="card-name">${ex.emoji} ${ex.name}</div>
+                <div class="card-desc">${ex.desc}</div>
+                <div class="card-stats">
+                    <div class="card-stat">Sets: <span>${ex.sets}</span></div>
+                    <div class="card-stat">Reps: <span>${ex.reps}</span></div>
+                </div>
+                <button class="view-btn">View Guide →</button>
+            </div>
+        </div>`;
+}
+
+function openModal(id) {
+    const ex = EXERCISES.find(e => e.id === id);
+    if (!ex) return;
+    document.getElementById('modal-anim').innerHTML = getAnimation(ex);
+    document.getElementById('modal-name').textContent = `${ex.emoji} ${ex.name}`;
+    document.getElementById('modal-tags').innerHTML = `
+        <span class="tag-diff diff-${ex.difficulty}" style="position:static;">${ex.difficulty}</span>
+        <span class="tag-muscle" style="position:static;">${ex.muscle}</span>
+        <span class="tag-muscle" style="position:static;">${ex.group} workout</span>`;
+    document.getElementById('modal-desc').textContent = ex.desc;
+    document.getElementById('modal-steps').innerHTML = ex.steps.map((s,i) => `
+        <div class="step-item">
+            <div class="step-num">${i+1}</div>
+            <div class="step-text">${s}</div>
+        </div>`).join('');
+    document.getElementById('modal-ask-btn').onclick = () => {
+        closeModal();
+        sessionStorage.setItem('fitbot_message', `Create a ${ex.group} workout plan that includes ${ex.name}. Focus on ${ex.muscle} muscles.`);
+        window.location.href = '/';
+    };
+    document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+renderAll();
+</script>
+</body>
+</html>
