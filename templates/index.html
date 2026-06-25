@@ -4,59 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitBot - AI Fitness Coach</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2KGPJJ2E3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-T2KGPJJ2E3');
+    </script>
 </head>
 <body>
+    <div class="bg-overlay"></div>
+    <div class="main-wrapper">
 
-    <!-- Header -->
-    <div class="header">
-        <h1>🏋️ Fit<span>Bot</span></h1>
-        <p>Your Personal AI Fitness Coach</p>
-    </div>
-
-    <!-- Chat Container -->
-    <div class="chat-container">
-
-        <!-- Chat Box -->
-        <div class="chat-box" id="chat-box">
-            <div class="message bot-message">
-                👋 Hey! I am FitBot, your personal AI fitness coach. Type, speak 🎤, or show me a photo 📸 of your food or exercise!
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <div class="logo-text">
+                    <h1>FitBot</h1>
+                    <p>AI Fitness Coach</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">{{ username[0].upper() }}</div>
+                <span class="username">{{ username }}</span>
+                <a href="/exercises" class="nav-btn">🏋️ Exercises</a>
+                <a href="/progress" class="nav-btn">📊 Progress</a>
+                <a href="/logout" class="logout-btn">Logout</a>
             </div>
         </div>
 
-        <!-- Image Preview -->
-        <div id="image-preview-container" style="display:none; padding: 10px; background:#111;">
-            <img id="image-preview" style="max-width: 200px; border-radius: 10px;"/>
-            <button onclick="clearImage()" style="margin-left:10px; background:#ff1e1e; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer;">❌ Remove</button>
+        <!-- Hero -->
+        <div class="hero">
+            <h2>Your Personal <span>AI Trainer</span></h2>
+            <p>Get personalized workout plans, diet tips and fitness advice — completely free</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Free</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Available</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">AI</span>
+                    <span class="stat-label">Powered</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="input-area">
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="online-dot"></div>
+                    <span>FitBot is online</span>
+                </div>
+                <div class="chat-header-right">
+                    <select id="lang-select" class="lang-select">
+                        <option value="en-US">🇬🇧 English</option>
+                        <option value="hi-IN">🇮🇳 Hindi</option>
+                    </select>
+                </div>
+            </div>
 
-            <!-- Camera Button -->
-            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)"/>
-            <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
+            <div class="chat-box" id="chat-box">
+                <div class="message bot-message">
+                    <div class="bot-avatar">F</div>
+                    <div class="message-content">
+                        👋 Welcome back <strong>{{ username }}</strong>! I am FitBot, your personal AI fitness coach.<br><br>
+                        Type your question, speak 🎤, or show me a photo 📸 of your food or exercise!
+                    </div>
+                </div>
+            </div>
 
-            <!-- Text Input -->
-            <input 
-                type="text" 
-                id="user-input" 
-                placeholder="Type, speak 🎤 or send a photo 📸..." 
-                onkeypress="handleKey(event)"
-            />
+            <div id="image-preview-container" style="display:none;padding:10px 16px;background:rgba(0,120,255,0.03);border-top:1px solid rgba(0,120,255,0.1);">
+                <img id="image-preview" style="max-width:150px;border-radius:8px;"/>
+                <button onclick="clearImage()" style="margin-left:10px;background:#0078ff;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button>
+            </div>
 
-            <!-- Mic Button -->
-            <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
+            <div class="pdf-bar">
+                <button onclick="downloadPDF()" class="pdf-btn">📄 Download Plan as PDF</button>
+            </div>
 
-            <!-- Voice Toggle Button -->
-            <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice ON">🔊</button>
-
-            <!-- Send Button -->
-            <button class="send-btn" onclick="sendMessage()">Send 💪</button>
-
+            <div class="input-area">
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)"/>
+                <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
+                <input type="text" id="user-input" placeholder="Ask me about workouts, diet, fitness..." onkeypress="handleKey(event)"/>
+                <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
+                <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice OFF — click to turn on">🔇</button>
+                <button class="send-btn" onclick="sendMessage()">Send 💪</button>
+            </div>
         </div>
+
+        <!-- Features Row -->
+        <div class="features">
+            <div class="feature-card" onclick="sendQuickMessage('Give me a personalized workout plan')">
+                <span class="feature-icon">🏋️</span>
+                <span>Workout Plans</span>
+            </div>
+            <div class="feature-card" onclick="sendQuickMessage('Give me a diet and nutrition plan')">
+                <span class="feature-icon">🥗</span>
+                <span>Diet & Nutrition</span>
+            </div>
+            <div class="feature-card" onclick="window.location.href='/exercises'">
+                <span class="feature-icon">🎬</span>
+                <span>Exercises</span>
+            </div>
+            <div class="feature-card" onclick="startVoice()">
+                <span class="feature-icon">🎤</span>
+                <span>Voice Input</span>
+            </div>
+        </div>
+
     </div>
-
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

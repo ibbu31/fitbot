@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBot - Exercise Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+        body {
+            background: #000a1e;
+            min-height: 100vh;
+            color: white;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 10, 30, 0.93);
+            z-index: 0;
+        }
+        .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,120,255,0.2); }
+        .header h1 { font-size: 1.5rem; font-weight: 900; }
+        .header h1 span { color: #0078ff; }
+        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #0078ff; color: #0078ff; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
+        .back-btn:hover { background: #0078ff; color: white; }
+
+        /* Search and filter */
+        .controls { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 200px; padding: 11px 16px; background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.2); border-radius: 25px; color: white; font-size: 0.9rem; outline: none; }
+        .search-input:focus { border-color: #0078ff; }
+        .search-input::placeholder { color: rgba(255,255,255,0.3); }
+        .filter-btn { padding: 10px 20px; border-radius: 25px; border: 1px solid rgba(0,120,255,0.2); background: transparent; color: rgba(255,255,255,0.6); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover, .filter-btn.active { background: #0078ff; border-color: #0078ff; color: white; }
+
+        /* Exercise grid */
+        .exercise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+        /* Exercise card */
+        .exercise-card {
+            background: rgba(0,5,20,0.95);
+            border: 1px solid rgba(0,120,255,0.15);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .exercise-card:hover {
+            border-color: #0078ff;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,120,255,0.2);
+        }
+
+        /* Animation container */
+        .animation-box {
+            height: 180px;
+            background: rgba(0,120,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Exercise stick figure animations */
+        .stick-figure { position: relative; width: 120px; height: 140px; }
+
+        /* Push up animation */
+        @keyframes pushup {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Squat animation */
+        @keyframes squat {
+            0% { transform: scaleY(1); }
+            50% { transform: scaleY(0.7) translateY(10px); }
+            100% { transform: scaleY(1); }
+        }
+
+        /* Jump animation */
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-30px); }
+            60% { transform: translateY(0); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Curl animation */
+        @keyframes curl {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-45deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Plank animation */
+        @keyframes plank-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Run animation */
+        @keyframes run {
+            0% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            100% { transform: translateX(-10px); }
+        }
+
+        .muscle-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 3px 10px;
+            background: rgba(0,120,255,0.2);
+            border: 1px solid rgba(0,120,255,0.3);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #0078ff;
+        }
+
+        .difficulty-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .diff-beginner { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .diff-intermediate { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .diff-advanced { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+        .exercise-info { padding: 16px; }
+        .exercise-name { font-size: 1rem; font-weight: 700; color: white; margin-bottom: 6px; }
+        .exercise-desc { font-size: 0.8rem; color: rgba(255,255,255,0.5); line-height: 1.5; margin-bottom: 12px; }
+        .exercise-stats { display: flex; gap: 12px; }
+        .stat { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+        .stat span { color: #0078ff; font-weight: 600; }
+        .try-btn { width: 100%; padding: 10px; background: rgba(0,120,255,0.1); border: 1px solid rgba(0,120,255,0.3); color: #0078ff; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 12px; }
+        .try-btn:hover { background: #0078ff; color: white; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: rgba(0,5,20,0.98); border: 1px solid rgba(0,120,255,0.3); border-radius: 20px; padding: 32px; max-width: 600px; width: 90%; position: relative; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 1.5rem; cursor: pointer; }
+        .modal-animation { height: 200px; background: rgba(0,120,255,0.05); border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+        .modal-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 8px; }
+        .modal-steps { margin-top: 16px; }
+        .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+        .step-num { width: 24px; height: 24px; background: #0078ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .step-text { font-size: 0.9rem; color: rgba(255,255,255,0.7); line-height: 1.5; }
+        .ask-fitbot-btn { width: 100%; padding: 12px; background: #0078ff; color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 16px; transition: all 0.2s; }
+        .ask-fitbot-btn:hover { background: #0060cc; }
+
+        @media (max-width: 600px) {
+            .exercise-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+
+        <!-- Header -->
+        <div class="header">
+            <h1>🏋️ Fit<span>Bot</span> Exercise Library</h1>
+            <a href="/" class="back-btn">← Back to Chat</a>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <input type="text" class="search-input" placeholder="Search exercises..." id="search" oninput="filterExercises()"/>
+            <button class="filter-btn active" onclick="filterByMuscle('all', this)">All</button>
+            <button class="filter-btn" onclick="filterByMuscle('chest', this)">Chest</button>
+            <button class="filter-btn" onclick="filterByMuscle('legs', this)">Legs</button>
+            <button class="filter-btn" onclick="filterByMuscle('back', this)">Back</button>
+            <button class="filter-btn" onclick="filterByMuscle('arms', this)">Arms</button>
+            <button class="filter-btn" onclick="filterByMuscle('core', this)">Core</button>
+            <button class="filter-btn" onclick="filterByMuscle('cardio', this)">Cardio</button>
+        </div>
+
+        <!-- Exercise Grid -->
+        <div class="exercise-grid" id="exercise-grid"></div>
+    </div>
+
+    <!-- Exercise Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div class="modal-animation" id="modal-animation"></div>
+            <div class="modal-title" id="modal-title"></div>
+            <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:12px;" id="modal-desc"></div>
+            <div class="modal-steps" id="modal-steps"></div>
+            <button class="ask-fitbot-btn" id="modal-ask-btn">💬 Ask FitBot to create a plan with this exercise</button>
+        </div>
+    </div>
+
+    <script>
+        const exercises = [
+            {
+                id: 1,
+                name: "Push Up",
+                muscle: "chest",
+                difficulty: "beginner",
+                sets: "3-4",
+                reps: "10-15",
+                description: "Classic upper body exercise targeting chest, shoulders and triceps.",
+                animation: "pushup",
+                emoji: "💪",
+                steps: [
+                    "Start in a high plank position with hands shoulder-width apart",
+                    "Lower your chest to the floor keeping your body straight",
+                    "Push back up to starting position by straightening your arms",
+                    "Keep your core tight throughout the movement",
+                    "Breathe in going down, breathe out going up"
+                ]
+            },
+            {
+                id: 2,
+                name: "Squat",
+                muscle: "legs",
+                difficulty: "beginner",
+                sets: "3-4",
+                reps: "12-15",
+                description: "King of leg exercises. Works quads, hamstrings, glutes and core.",
+                animation: "squat",
+                emoji: "🦵",
+                steps: [
+                    "Stand with feet shoulder-width apart, toes slightly out",
+                    "Push your hips back and bend your knees",
+                    "Lower until thighs are parallel to the floor",
+                    "Keep your chest up and knees tracking over toes",
+                    "Drive through your heels to stand back up"
+                ]
+            },
+            {
+                id: 3,
+                name: "Jumping Jacks",
+                muscle: "cardio",
+                difficulty: "beginner",
+                sets: "3",
+                reps: "30",
+                description: "Full body cardio exercise to warm up and burn calories.",
+                animation: "jump",
+                emoji: "⚡",
+                steps: [
+                    "Stand with feet together and arms at your sides",
+                    "Jump and spread your feet wider than shoulder-width",
+                    "At the same time raise your arms above your head",
+                    "Jump back to starting position",
+                    "Repeat continuously at a steady pace"
+                ]
+            },
+            {
+                id: 4,
+                name: "Bicep Curl",
+                muscle: "arms",
+                difficulty: "beginner",
+                sets: "3",
+                reps: "12",
+                description: "Isolation exercise for biceps using dumbbells or resistance bands.",
+                animation: "curl",
+                emoji: "💪",
+                steps: [
+                    "Stand holding dumbbells at your sides, palms facing forward",
+                    "Keep your upper arms still against your torso",
+                    "Curl the weights up toward your shoulders",
+                    "Squeeze your biceps at the top of the movement",
+                    "Slowly lower back to starting position"
+                ]
+            },
+            {
+                id: 5,
+                name: "Plank",
+                muscle: "core",
+                difficulty: "beginner",
+                sets: "3",
+                reps: "30-60s",
+                description: "Static hold that builds core strength and stability.",
+                animation: "plank",
+                emoji: "🏋️",
+                steps: [
+                    "Start on your forearms and toes",
+                    "Keep your body in a straight line from head to heels",
+                    "Engage your core by pulling belly button to spine",
+                    "Keep your hips level — don't let them sag or rise",
+                    "Hold the position while breathing steadily"
+                ]
+            },
+            {
+                id: 6,
+                name: "Pull Up",
+                muscle: "back",
+                difficulty: "intermediate",
+                sets: "3-4",
+                reps: "6-10",
+                description: "Upper body compound movement for back and biceps.",
+                animation: "pullup",
+                emoji: "🏋️",
+                steps: [
+                    "Hang from a bar with hands slightly wider than shoulders",
+                    "Pull your chest toward the bar by squeezing your back",
+                    "Drive your elbows down and back as you pull up",
+                    "Pause when your chin is above the bar",
+                    "Lower yourself slowly with control"
+                ]
+            },
+            {
+                id: 7,
+                name: "Burpee",
+                muscle: "cardio",
+                difficulty: "intermediate",
+                sets: "3-4",
+                reps: "10-12",
+                description: "Full body explosive exercise combining squat, plank and jump.",
+                animation: "jump",
+                emoji: "🔥",
+                steps: [
+                    "Stand with feet shoulder-width apart",
+                    "Drop into a squat and place hands on floor",
+                    "Jump feet back into a plank position",
+                    "Do a push up (optional for beginners)",
+                    "Jump feet forward and explode up with arms overhead"
+                ]
+            },
+            {
+                id: 8,
+                name: "Lunge",
+                muscle: "legs",
+                difficulty: "beginner",
+                sets: "3",
+                reps: "12 each leg",
+                description: "Unilateral leg exercise for quads, glutes and balance.",
+                animation: "squat",
+                emoji: "🦵",
+                steps: [
+                    "Stand tall with feet hip-width apart",
+                    "Step forward with one foot about 2 feet",
+                    "Lower your back knee toward the floor",
+                    "Keep front knee over your ankle not past your toes",
+                    "Push through front heel to return to standing"
+                ]
+            },
+            {
+                id: 9,
+                name: "Deadlift",
+                muscle: "back",
+                difficulty: "advanced",
+                sets: "4-5",
+                reps: "5-8",
+                description: "King of all lifts. Works entire posterior chain.",
+                animation: "squat",
+                emoji: "💪",
+                steps: [
+                    "Stand with feet hip-width apart, bar over mid-foot",
+                    "Hinge at hips and grab bar just outside your legs",
+                    "Take a deep breath and brace your core hard",
+                    "Push floor away to lift — don't pull with your back",
+                    "Lock out hips at top then lower with control"
+                ]
+            },
+            {
+                id: 10,
+                name: "Mountain Climbers",
+                muscle: "core",
+                difficulty: "intermediate",
+                sets: "3",
+                reps: "20 each leg",
+                description: "Dynamic core exercise that also raises heart rate.",
+                animation: "run",
+                emoji: "🏃",
+                steps: [
+                    "Start in a high plank position",
+                    "Drive one knee toward your chest",
+                    "Quickly switch legs in a running motion",
+                    "Keep your hips level throughout",
+                    "Maintain a steady breathing rhythm"
+                ]
+            },
+            {
+                id: 11,
+                name: "Tricep Dip",
+                muscle: "arms",
+                difficulty: "beginner",
+                sets: "3",
+                reps: "12-15",
+                description: "Bodyweight exercise targeting triceps using a chair or bench.",
+                animation: "pushup",
+                emoji: "💪",
+                steps: [
+                    "Sit on edge of bench with hands beside hips",
+                    "Slide forward so your hips are off the bench",
+                    "Bend elbows to lower your body toward the floor",
+                    "Keep elbows pointing back not flaring out",
+                    "Push back up to starting position"
+                ]
+            },
+            {
+                id: 12,
+                name: "Bench Press",
+                muscle: "chest",
+                difficulty: "intermediate",
+                sets: "4",
+                reps: "8-10",
+                description: "Classic chest builder using barbell or dumbbells.",
+                animation: "pushup",
+                emoji: "🏋️",
+                steps: [
+                    "Lie on bench with feet flat on floor",
+                    "Grip bar slightly wider than shoulder width",
+                    "Lower bar to mid-chest with controlled motion",
+                    "Keep wrists straight and elbows at 45 degrees",
+                    "Press bar up and slightly back to starting position"
+                ]
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentExercise = null;
+
+        function getAnimationHTML(type, emoji) {
+            const animations = {
+                pushup: `
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <g style="animation: pushup 1.5s ease-in-out infinite;">
+                            <circle cx="60" cy="20" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="60" y1="30" x2="60" y2="70" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="45" x2="35" y2="65" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="45" x2="85" y2="65" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="70" x2="45" y2="100" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="70" x2="75" y2="100" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes pushup {
+                                0% { transform: translateY(0); }
+                                50% { transform: translateY(-15px); }
+                                100% { transform: translateY(0); }
+                            }
+                        </style>
+                    </svg>`,
+                squat: `
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <g id="squat-fig" style="animation: squat-anim 1.5s ease-in-out infinite; transform-origin: 60px 60px;">
+                            <circle cx="60" cy="15" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="60" y1="25" x2="60" y2="60" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="40" x2="35" y2="55" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="40" x2="85" y2="55" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="60" x2="40" y2="90" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="60" x2="80" y2="90" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="40" y1="90" x2="35" y2="110" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="80" y1="90" x2="85" y2="110" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes squat-anim {
+                                0% { transform: scaleY(1); }
+                                50% { transform: scaleY(0.75) translateY(15px); }
+                                100% { transform: scaleY(1); }
+                            }
+                        </style>
+                    </svg>`,
+                jump: `
+                    <svg width="120" height="130" viewBox="0 0 120 130">
+                        <g style="animation: jump-anim 1.2s ease-in-out infinite; transform-origin: 60px 80px;">
+                            <circle cx="60" cy="20" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="60" y1="30" x2="60" y2="70" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="45" x2="25" y2="35" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="45" x2="95" y2="35" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="70" x2="45" y2="100" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="70" x2="75" y2="100" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes jump-anim {
+                                0% { transform: translateY(0); }
+                                40% { transform: translateY(-25px); }
+                                60% { transform: translateY(-25px); }
+                                100% { transform: translateY(0); }
+                            }
+                        </style>
+                    </svg>`,
+                curl: `
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="15" r="10" fill="#0078ff" opacity="0.8"/>
+                        <line x1="60" y1="25" x2="60" y2="70" stroke="#0078ff" stroke-width="3"/>
+                        <g style="animation: curl-anim 1.5s ease-in-out infinite; transform-origin: 35px 55px;">
+                            <line x1="60" y1="45" x2="35" y2="55" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="35" y1="55" x2="25" y2="35" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <line x1="60" y1="45" x2="85" y2="60" stroke="#0078ff" stroke-width="3"/>
+                        <line x1="60" y1="70" x2="45" y2="105" stroke="#0078ff" stroke-width="3"/>
+                        <line x1="60" y1="70" x2="75" y2="105" stroke="#0078ff" stroke-width="3"/>
+                        <style>
+                            @keyframes curl-anim {
+                                0% { transform: rotate(0deg); }
+                                50% { transform: rotate(-50deg); }
+                                100% { transform: rotate(0deg); }
+                            }
+                        </style>
+                    </svg>`,
+                plank: `
+                    <svg width="160" height="80" viewBox="0 0 160 80">
+                        <g style="animation: plank-anim 2s ease-in-out infinite;">
+                            <circle cx="130" cy="25" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="120" y1="30" x2="30" y2="45" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="100" y1="35" x2="95" y2="60" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="100" y1="35" x2="110" y2="60" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="30" y1="45" x2="20" y2="65" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="30" y1="45" x2="35" y2="65" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes plank-anim {
+                                0% { opacity: 1; }
+                                50% { opacity: 0.6; }
+                                100% { opacity: 1; }
+                            }
+                        </style>
+                    </svg>`,
+                pullup: `
+                    <svg width="120" height="130" viewBox="0 0 120 130">
+                        <line x1="10" y1="10" x2="110" y2="10" stroke="#0078ff" stroke-width="4" opacity="0.5"/>
+                        <g style="animation: pullup-anim 1.8s ease-in-out infinite;">
+                            <circle cx="60" cy="30" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="60" y1="10" x2="40" y2="15" stroke="#0078ff" stroke-width="2.5"/>
+                            <line x1="60" y1="10" x2="80" y2="15" stroke="#0078ff" stroke-width="2.5"/>
+                            <line x1="60" y1="40" x2="60" y2="80" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="55" x2="40" y2="70" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="55" x2="80" y2="70" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="80" x2="45" y2="110" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="80" x2="75" y2="110" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes pullup-anim {
+                                0% { transform: translateY(0); }
+                                50% { transform: translateY(-20px); }
+                                100% { transform: translateY(0); }
+                            }
+                        </style>
+                    </svg>`,
+                run: `
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <g style="animation: run-anim 0.8s ease-in-out infinite;">
+                            <circle cx="60" cy="15" r="10" fill="#0078ff" opacity="0.8"/>
+                            <line x1="60" y1="25" x2="60" y2="65" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="40" x2="30" y2="30" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="40" x2="85" y2="55" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="65" x2="35" y2="95" stroke="#0078ff" stroke-width="3"/>
+                            <line x1="60" y1="65" x2="80" y2="90" stroke="#0078ff" stroke-width="3"/>
+                        </g>
+                        <style>
+                            @keyframes run-anim {
+                                0% { transform: translateX(-8px) rotate(-5deg); }
+                                50% { transform: translateX(8px) rotate(5deg); }
+                                100% { transform: translateX(-8px) rotate(-5deg); }
+                            }
+                        </style>
+                    </svg>`
+            };
+            return animations[type] || `<div style="font-size:4rem;">${emoji}</div>`;
+        }
+
+        function renderExercises(list) {
+            const grid = document.getElementById('exercise-grid');
+            grid.innerHTML = list.map(ex => `
+                <div class="exercise-card" data-muscle="${ex.muscle}" onclick="openModal(${ex.id})">
+                    <div class="animation-box">
+                        ${getAnimationHTML(ex.animation, ex.emoji)}
+                        <span class="difficulty-tag diff-${ex.difficulty}">${ex.difficulty}</span>
+                        <span class="muscle-tag">${ex.muscle}</span>
+                    </div>
+                    <div class="exercise-info">
+                        <div class="exercise-name">${ex.emoji} ${ex.name}</div>
+                        <div class="exercise-desc">${ex.description}</div>
+                        <div class="exercise-stats">
+                            <div class="stat">Sets: <span>${ex.sets}</span></div>
+                            <div class="stat">Reps: <span>${ex.reps}</span></div>
+                        </div>
+                        <button class="try-btn">View Exercise Guide →</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterExercises() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const filtered = exercises.filter(ex => {
+                const matchSearch = ex.name.toLowerCase().includes(search) || ex.muscle.toLowerCase().includes(search);
+                const matchFilter = currentFilter === 'all' || ex.muscle === currentFilter;
+                return matchSearch && matchFilter;
+            });
+            renderExercises(filtered);
+        }
+
+        function filterByMuscle(muscle, btn) {
+            currentFilter = muscle;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterExercises();
+        }
+
+        function openModal(id) {
+            const ex = exercises.find(e => e.id === id);
+            currentExercise = ex;
+
+            document.getElementById('modal-animation').innerHTML = getAnimationHTML(ex.animation, ex.emoji);
+            document.getElementById('modal-title').textContent = `${ex.emoji} ${ex.name}`;
+            document.getElementById('modal-desc').textContent = ex.description;
+            document.getElementById('modal-steps').innerHTML = ex.steps.map((step, i) => `
+                <div class="step">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-text">${step}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-ask-btn').onclick = () => {
+                closeModal();
+                sessionStorage.setItem('fitbot_message', `Create a workout plan that includes ${ex.name}. I want to focus on ${ex.muscle}`);
+                window.location.href = '/';
+            };
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Check if coming from exercise page
+        window.addEventListener('load', () => {
+            const msg = sessionStorage.getItem('fitbot_message');
+            if (msg) {
+                sessionStorage.removeItem('fitbot_message');
+                const input = document.getElementById('user-input');
+                if (input) {
+                    input.value = msg;
+                }
+            }
+        });
+
+        renderExercises(exercises);
+    </script>
+</body>
+</html>

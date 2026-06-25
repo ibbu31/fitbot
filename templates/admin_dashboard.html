@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBot Admin Dashboard</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body { background:#0a0a0a; color:white; padding:20px; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+        h1 { font-size:1.5rem; font-weight:900; }
+        h1 span { color:#ff1e1e; }
+        .logout { padding:8px 16px; background:transparent; border:1px solid #ff1e1e; color:#ff1e1e; border-radius:20px; cursor:pointer; text-decoration:none; font-size:0.85rem; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+        .stat-card { background:#111; border:1px solid #222; border-radius:12px; padding:20px; }
+        .stat-card h3 { color:rgba(255,255,255,0.5); font-size:0.8rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+        .stat-card .number { font-size:2rem; font-weight:900; color:#ff1e1e; }
+        .section { background:#111; border:1px solid #222; border-radius:12px; padding:20px; margin-bottom:16px; }
+        .section h2 { font-size:1rem; margin-bottom:16px; color:rgba(255,255,255,0.8); }
+        table { width:100%; border-collapse:collapse; }
+        th { text-align:left; padding:8px 12px; font-size:0.75rem; color:rgba(255,255,255,0.4); letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #222; }
+        td { padding:10px 12px; font-size:0.85rem; border-bottom:1px solid #1a1a1a; }
+        .badge { padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
+        .badge-red { background:rgba(255,30,30,0.2); color:#ff1e1e; }
+        .badge-green { background:rgba(34,197,94,0.2); color:#22c55e; }
+        .refresh-btn { padding:8px 16px; background:#ff1e1e; color:white; border:none; border-radius:8px; cursor:pointer; font-size:0.85rem; margin-left:12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Fit<span>Bot</span> Admin Dashboard</h1>
+        <div>
+            <button class="refresh-btn" onclick="loadStats()">Refresh</button>
+            <a href="/admin/logout" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Users</h3>
+            <div class="number" id="total-users">...</div>
+        </div>
+        <div class="stat-card">
+            <h3>New Today</h3>
+            <div class="number" id="users-today">...</div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Messages</h3>
+            <div class="number" id="total-messages">...</div>
+        </div>
+        <div class="stat-card">
+            <h3>Messages Today</h3>
+            <div class="number" id="messages-today">...</div>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="section">
+        <h2>Recent Registrations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="recent-users-table">
+                <tr><td colspan="4" style="color:rgba(255,255,255,0.3)">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Users -->
+    <div class="section">
+        <h2>Most Active Users</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Messages Sent</th>
+                </tr>
+            </thead>
+            <tbody id="top-users-table">
+                <tr><td colspan="2" style="color:rgba(255,255,255,0.3)">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Daily Messages -->
+    <div class="section">
+        <h2>Messages Last 7 Days</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Messages</th>
+                </tr>
+            </thead>
+            <tbody id="daily-messages-table">
+                <tr><td colspan="2" style="color:rgba(255,255,255,0.3)">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const response = await fetch('/admin/stats');
+            const data = await response.json();
+
+            document.getElementById('total-users').textContent = data.total_users;
+            document.getElementById('users-today').textContent = data.users_today;
+            document.getElementById('total-messages').textContent = data.total_messages;
+            document.getElementById('messages-today').textContent = data.messages_today;
+
+            // Recent users
+            const recentTable = document.getElementById('recent-users-table');
+            recentTable.innerHTML = data.recent_users.map(u => `
+                <tr>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                    <td><span class="badge badge-green">Active</span></td>
+                </tr>
+            `).join('');
+
+            // Top users
+            const topTable = document.getElementById('top-users-table');
+            topTable.innerHTML = data.top_users.map(u => `
+                <tr>
+                    <td>${u.username}</td>
+                    <td><span class="badge badge-red">${u.message_count} messages</span></td>
+                </tr>
+            `).join('');
+
+            // Daily messages
+            const dailyTable = document.getElementById('daily-messages-table');
+            dailyTable.innerHTML = data.daily_messages.map(d => `
+                <tr>
+                    <td>${d.date}</td>
+                    <td>${d.count}</td>
+                </tr>
+            `).join('');
+        }
+
+        loadStats();
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

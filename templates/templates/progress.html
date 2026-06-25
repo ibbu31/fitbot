@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBot - Progress Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+        body {
+            background: #000a1e;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 10, 30, 0.92);
+            z-index: 0;
+        }
+        .wrapper { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,120,255,0.2); }
+        .header h1 { font-size: 1.5rem; font-weight: 900; }
+        .header h1 span { color: #0078ff; }
+        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #0078ff; color: #0078ff; border-radius: 20px; text-decoration: none; font-size: 0.85rem; }
+        .card { background: rgba(0,5,20,0.95); border: 1px solid rgba(0,120,255,0.15); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 1rem; color: rgba(255,255,255,0.7); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .form-group label { color: rgba(255,255,255,0.5); font-size: 0.75rem; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px 14px; background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.2); border-radius: 8px; color: white; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #0078ff; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: #0078ff; }
+        .checkbox-group label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-primary { background: #0078ff; color: white; box-shadow: 0 0 20px rgba(0,120,255,0.3); }
+        .btn-primary:hover { background: #0060cc; }
+        .success { color: #22c55e; font-size: 0.85rem; margin-top: 10px; display: none; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.15); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-box .number { font-size: 1.8rem; font-weight: 900; color: #0078ff; }
+        .stat-box .label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 10px 12px; font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid rgba(0,120,255,0.15); }
+        td { padding: 12px; font-size: 0.85rem; border-bottom: 1px solid rgba(0,120,255,0.05); }
+        .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-done { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .badge-skip { background: rgba(255,100,100,0.2); color: #ff6464; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1>🏋️ Fit<span>Bot</span> Progress</h1>
+            <a href="/" class="back-btn">← Back to Chat</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-box">
+                <div class="number" id="total-workouts">0</div>
+                <div class="label">Workouts Done</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="current-weight">--</div>
+                <div class="label">Current Weight (kg)</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="streak">0</div>
+                <div class="label">Day Streak 🔥</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="total-logs">0</div>
+                <div class="label">Total Logs</div>
+            </div>
+        </div>
+
+        <!-- Log Progress -->
+        <div class="card">
+            <h2>📝 Log Today's Progress</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="weight" placeholder="70.5" step="0.1"/>
+                </div>
+                <div class="form-group">
+                    <label>Body Fat %</label>
+                    <input type="number" id="body-fat" placeholder="15" step="0.1"/>
+                </div>
+                <div class="form-group">
+                    <label>Workout Name</label>
+                    <input type="text" id="workout-name" placeholder="Chest Day"/>
+                </div>
+                <div class="form-group">
+                    <label>Sets Completed</label>
+                    <input type="number" id="sets" placeholder="12"/>
+                </div>
+                <div class="form-group">
+                    <label>Reps Completed</label>
+                    <input type="number" id="reps" placeholder="120"/>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="workout-done"/>
+                <label>Workout Completed ✅</label>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="How did it feel? Any personal records?"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="logProgress()">Save Progress 💪</button>
+            <p class="success" id="success-msg">✅ Progress saved successfully!</p>
+        </div>
+
+        <!-- History -->
+        <div class="card">
+            <h2>📊 Progress History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Weight</th>
+                        <th>Workout</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table">
+                    <tr><td colspan="5" style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function logProgress() {
+            const data = {
+                weight: parseFloat(document.getElementById('weight').value) || null,
+                body_fat: parseFloat(document.getElementById('body-fat').value) || null,
+                workout_name: document.getElementById('workout-name').value,
+                sets_completed: parseInt(document.getElementById('sets').value) || 0,
+                reps_completed: parseInt(document.getElementById('reps').value) || 0,
+                workout_completed: document.getElementById('workout-done').checked,
+                notes: document.getElementById('notes').value
+            };
+
+            const response = await fetch('/progress/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('success-msg').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('success-msg').style.display = 'none';
+                }, 3000);
+                loadHistory();
+            }
+        }
+
+        async function loadHistory() {
+            const response = await fetch('/progress/history');
+            const history = await response.json();
+
+            // Update stats
+            const workoutsDone = history.filter(h => h.workout_completed).length;
+            const latestWeight = history.find(h => h.weight)?.weight || '--';
+
+            document.getElementById('total-workouts').textContent = workoutsDone;
+            document.getElementById('current-weight').textContent = latestWeight !== '--' ? latestWeight + ' kg' : '--';
+            document.getElementById('total-logs').textContent = history.length;
+
+            // Calculate streak
+            let streak = 0;
+            const today = new Date().toDateString();
+            for (const log of history) {
+                if (log.workout_completed) streak++;
+                else break;
+            }
+            document.getElementById('streak').textContent = streak;
+
+            // Update table
+            const table = document.getElementById('history-table');
+            if (history.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">No progress logged yet. Start today! 💪</td></tr>';
+                return;
+            }
+
+            table.innerHTML = history.map(h => `
+                <tr>
+                    <td>${new Date(h.created_at).toLocaleDateString()}</td>
+                    <td>${h.weight ? h.weight + ' kg' : '--'}</td>
+                    <td>${h.workout_name || '--'}</td>
+                    <td><span class="badge ${h.workout_completed ? 'badge-done' : 'badge-skip'}">${h.workout_completed ? '✅ Done' : '⏭️ Skipped'}</span></td>
+                    <td style="color:rgba(255,255,255,0.5)">${h.notes || '--'}</td>
+                </tr>
+            `).join('');
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
