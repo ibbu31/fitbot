@@ -272,22 +272,22 @@ def progress_history():
         return jsonify([dict(row) for row in history])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route("/generate-pdf", methods=["POST"])
 @login_required
 def generate_pdf():
-    user_id = session['user_id']
-    username = session.get('username')
+    username = session.get('username', 'User')
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib import colors
         from reportlab.lib.units import mm
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
         import io
 
         data = request.json
         workout_plan = data.get('workout_plan', [])
+        plan_text = data.get('plan_text', '')
         plan_type = data.get('plan_type', 'Workout Plan')
 
         buffer = io.BytesIO()
@@ -295,54 +295,108 @@ def generate_pdf():
             rightMargin=20*mm, leftMargin=20*mm,
             topMargin=20*mm, bottomMargin=20*mm)
 
-        styles = getSampleStyleSheet()
-        story = []
-
+        # Styles
         title_style = ParagraphStyle('Title', fontSize=24,
             textColor=colors.HexColor('#0078ff'),
-            fontName='Helvetica-Bold', spaceAfter=8, alignment=1)
-        story.append(Paragraph("FitBot — Your AI Fitness Coach", title_style))
-
-        subtitle_style = ParagraphStyle('Subtitle', fontSize=12,
+            fontName='Helvetica-Bold', spaceAfter=4, alignment=TA_CENTER)
+        subtitle_style = ParagraphStyle('Subtitle', fontSize=11,
             textColor=colors.HexColor('#888888'),
-            fontName='Helvetica', spaceAfter=20, alignment=1)
-        story.append(Paragraph(f"Personal {plan_type} for {username}", subtitle_style))
-        story.append(Spacer(1, 10*mm))
+            fontName='Helvetica', spaceAfter=20, alignment=TA_CENTER)
+        section_style = ParagraphStyle('Section', fontSize=14,
+            textColor=colors.HexColor('#0078ff'),
+            fontName='Helvetica-Bold', spaceAfter=8, spaceBefore=16)
+        body_style = ParagraphStyle('Body', fontSize=10,
+            textColor=colors.HexColor('#333333'),
+            fontName='Helvetica', leading=16, spaceAfter=4)
+        bullet_style = ParagraphStyle('Bullet', fontSize=10,
+            textColor=colors.HexColor('#333333'),
+            fontName='Helvetica', leading=16, spaceAfter=3,
+            leftIndent=16, bulletIndent=6)
 
-        if workout_plan:
-            header_style = ParagraphStyle('Header', fontSize=14,
-                textColor=colors.HexColor('#0078ff'),
-                fontName='Helvetica-Bold', spaceAfter=8)
-            story.append(Paragraph(plan_type, header_style))
+        BLUE = colors.HexColor('#0078ff')
+        LIGHT = colors.HexColor('#f0f6ff')
+        WHITE = colors.white
+
+        story = []
+
+        # Header
+        story.append(Paragraph("🏋️ FitBot — Your AI Fitness Coach", title_style))
+        story.append(Paragraph(f"Personal {plan_type} for {username}", subtitle_style))
+        story.append(Spacer(1, 6*mm))
+
+        # If we have parsed exercises — show them in table
+        if workout_plan and len(workout_plan) > 0 and workout_plan[0].get('name') != 'See your FitBot chat for full plan':
+            story.append(Paragraph(f"📋 {plan_type}", section_style))
 
             table_data = [['Exercise', 'Sets', 'Reps', 'Rest']]
-            for exercise in workout_plan:
+            for ex in workout_plan:
                 table_data.append([
-                    exercise.get('name', ''),
-                    str(exercise.get('sets', '')),
-                    str(exercise.get('reps', '')),
-                    exercise.get('rest', '')
+                    ex.get('name', ''),
+                    str(ex.get('sets', '3')),
+                    str(ex.get('reps', '10-12')),
+                    str(ex.get('rest', '60s'))
                 ])
 
-            table = Table(table_data, colWidths=[80*mm, 25*mm, 35*mm, 30*mm])
+            table = Table(table_data, colWidths=[90*mm, 25*mm, 35*mm, 25*mm])
             table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0078ff')),
-                ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                ('BACKGROUND', (0,0), (-1,0), BLUE),
+                ('TEXTCOLOR', (0,0), (-1,0), WHITE),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0,0), (-1,-1), 10),
-                ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f0f0f0'), colors.white]),
-                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dddddd')),
-                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('ROWBACKGROUNDS', (0,1), (-1,-1), [LIGHT, WHITE]),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d0e4ff')),
+                ('ALIGN', (1,0), (-1,-1), 'CENTER'),
+                ('ALIGN', (0,0), (0,-1), 'LEFT'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ('TOPPADDING', (0,0), (-1,-1), 6),
-                ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+                ('TOPPADDING', (0,0), (-1,-1), 7),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 7),
+                ('LEFTPADDING', (0,0), (0,-1), 10),
             ]))
             story.append(table)
+            story.append(Spacer(1, 8*mm))
+
+        # Always include the full chat text as plan details
+        if plan_text and len(plan_text.strip()) > 10:
+            story.append(Paragraph("📝 Your Complete Plan Details", section_style))
+
+            # Split plan text into lines and add as paragraphs
+            lines = plan_text.split('\n')
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    story.append(Spacer(1, 3*mm))
+                    continue
+
+                # Clean line from HTML tags
+                import re
+                line = re.sub(r'<[^>]+>', '', line)
+                line = line.replace('&nbsp;', ' ').replace('&amp;', '&')
+
+                if not line.strip():
+                    continue
+
+                # Detect bullet points
+                if line.startswith('•') or line.startswith('-') or line.startswith('*'):
+                    clean = line.lstrip('•-* ').strip()
+                    if clean:
+                        story.append(Paragraph(f"• {clean}", bullet_style))
+                # Detect headings (bold lines or lines with emojis at start)
+                elif len(line) < 60 and (line.isupper() or any(ord(c) > 127 for c in line[:3])):
+                    story.append(Paragraph(line, ParagraphStyle('h',
+                        fontSize=11, textColor=colors.HexColor('#0078ff'),
+                        fontName='Helvetica-Bold', spaceAfter=4, spaceBefore=8)))
+                else:
+                    story.append(Paragraph(line, body_style))
 
         story.append(Spacer(1, 10*mm))
-        footer_style = ParagraphStyle('Footer', fontSize=9,
-            textColor=colors.HexColor('#888888'),
-            fontName='Helvetica', alignment=1)
+
+        # Footer
+        from reportlab.platypus import HRFlowable
+        story.append(HRFlowable(width="100%", thickness=0.5,
+            color=colors.HexColor('#cccccc'), spaceAfter=6))
+        footer_style = ParagraphStyle('Footer', fontSize=8,
+            textColor=colors.HexColor('#999999'),
+            fontName='Helvetica', alignment=TA_CENTER)
         story.append(Paragraph("Generated by FitBot AI — Your Personal Fitness Coach", footer_style))
         story.append(Paragraph("Always consult a doctor before starting any fitness program.", footer_style))
 
@@ -352,13 +406,15 @@ def generate_pdf():
         return send_file(
             buffer,
             as_attachment=True,
-            download_name=f"fitbot_{plan_type.lower().replace(' ', '_')}.pdf",
+            download_name=f'fitbot_{plan_type.lower().replace(" ", "_")}_{username}.pdf',
             mimetype='application/pdf'
         )
 
     except Exception as e:
         print(f"PDF error: {e}")
-        return jsonify({'error': 'Could not generate PDF. Please try again!'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Could not generate PDF: {str(e)}'}), 500
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
@@ -410,6 +466,64 @@ def forgot_password():
     except Exception as e:
         print(f"Forgot password error: {e}")
         return jsonify({'error': 'Something went wrong. Please try again!'}), 500
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if request.method == "GET":
+        return render_template("reset_password.html", token=token)
+
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'Invalid request'}), 400
+
+        new_password = data.get("password", "").strip()
+
+        if not new_password:
+            return jsonify({'error': 'Password is required'}), 400
+
+        if len(new_password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Check token exists and not expired
+        cursor.execute('''
+            SELECT * FROM password_resets
+            WHERE token = %s
+            AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 hour'
+        ''', (token,))
+        reset = cursor.fetchone()
+
+        if not reset:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Reset link is invalid or expired! Please request a new one.'}), 400
+
+        # Hash new password
+        hashed = bcrypt.generate_password_hash(new_password).decode('utf-8')
+
+        # Update password
+        cursor.execute(
+            'UPDATE users SET password = %s WHERE id = %s',
+            (hashed, reset['user_id'])
+        )
+
+        # Delete used token
+        cursor.execute(
+            'DELETE FROM password_resets WHERE token = %s',
+            (token,)
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Password reset successfully!'})
+
+    except Exception as e:
+        print(f"Reset password error: {e}")
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
 @app.route("/exercises")
 @login_required
 def exercises():
@@ -491,6 +605,123 @@ def workout_api():
             recent_training_load=int(data.get("recent_training_load", 3))
         )
         return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    # ==================
+# STREAK & JOURNEY API
+# ==================
+@app.route("/api/user-stats", methods=["GET"])
+@login_required
+def user_stats():
+    user_id = session['user_id']
+    try:
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Get all progress ordered by date
+        cursor.execute('''
+            SELECT date, workout_completed
+            FROM progress
+            WHERE user_id = %s
+            ORDER BY date DESC
+        ''', (user_id,))
+        logs = cursor.fetchall()
+
+        # Calculate streak
+        streak = 0
+        from datetime import date, timedelta
+        today = date.today()
+        check_date = today
+
+        for log in logs:
+            log_date = log['date']
+            if isinstance(log_date, str):
+                from datetime import datetime
+                log_date = datetime.strptime(log_date, '%Y-%m-%d').date()
+            if log_date == check_date and log['workout_completed']:
+                streak += 1
+                check_date -= timedelta(days=1)
+            elif log_date < check_date:
+                break
+
+        # Total days since joined
+        cursor.execute('SELECT created_at FROM users WHERE id = %s', (user_id,))
+        user = cursor.fetchone()
+        days_since_joined = (today - user['created_at'].date()).days + 1
+
+        # Total workouts completed
+        cursor.execute('''
+            SELECT COUNT(*) as total FROM progress
+            WHERE user_id = %s AND workout_completed = TRUE
+        ''', (user_id,))
+        total_workouts = cursor.fetchone()['total']
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            'streak': streak,
+            'day_number': days_since_joined,
+            'total_workouts': total_workouts,
+            'username': session.get('username')
+        })
+    except Exception as e:
+        print(f"User stats error: {e}")
+        return jsonify({'streak': 0, 'day_number': 1, 'total_workouts': 0})
+
+# ==================
+# DAILY REMINDER EMAIL
+# ==================
+@app.route("/api/send-reminders", methods=["POST"])
+def send_reminders():
+    # This endpoint can be called by a cron job
+    secret = request.json.get('secret', '')
+    if secret != os.getenv('ADMIN_PASSWORD', 'fitbot-admin-2024'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        from datetime import date
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Find users who have NOT logged progress today
+        cursor.execute('''
+            SELECT u.id, u.username, u.email
+            FROM users u
+            WHERE u.id NOT IN (
+                SELECT DISTINCT user_id FROM progress
+                WHERE date = CURRENT_DATE
+            )
+            AND u.created_at < CURRENT_TIMESTAMP - INTERVAL '1 day'
+        ''')
+        inactive_users = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        sent = 0
+        for user in inactive_users:
+            try:
+                msg = Message(
+                    subject="💪 Your FitBot workout is waiting!",
+                    recipients=[user['email']],
+                    html=f"""
+                    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#000a1e;color:white;padding:30px;border-radius:16px;">
+                        <h1 style="color:#0078ff;text-align:center;">🏋️ FitBot</h1>
+                        <h2 style="text-align:center;">Hey {user['username']}! Don't break your streak! 🔥</h2>
+                        <p style="color:rgba(255,255,255,0.7);text-align:center;">You haven't logged your workout today. Your fitness journey is waiting!</p>
+                        <div style="text-align:center;margin:30px 0;">
+                            <a href="https://fitbot-402357265699.us-central1.run.app" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Today's Workout 💪</a>
+                        </div>
+                        <p style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.85rem;">Small steps every day lead to big results!</p>
+                    </div>
+                    """
+                )
+                mail.send(msg)
+                sent += 1
+            except Exception as e:
+                print(f"Email error for {user['email']}: {e}")
+
+        return jsonify({'success': True, 'reminders_sent': sent})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

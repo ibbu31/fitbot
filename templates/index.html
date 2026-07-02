@@ -2,7 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FitBot - AI Fitness Coach</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2KGPJJ2E3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-T2KGPJJ2E3');
+    </script>
+</head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FitBot - AI Fitness Coach</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -36,25 +52,42 @@
             </div>
         </div>
 
-        <!-- Hero -->
-        <div class="hero">
-            <h2>Your Personal <span>AI Trainer</span></h2>
-            <p>Get personalized workout plans, diet tips and fitness advice — completely free</p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">Free</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">24/7</span>
-                    <span class="stat-label">Available</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">AI</span>
-                    <span class="stat-label">Powered</span>
-                </div>
+        <!-- Streak & Journey Bar -->
+        <div class="streak-bar" id="streak-bar">
+            <div class="streak-item">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-value" id="streak-count">0</span>
+                <span class="streak-label">Day Streak</span>
+            </div>
+            <div class="streak-divider"></div>
+            <div class="streak-item">
+                <span class="streak-icon">📅</span>
+                <span class="streak-value" id="day-number">1</span>
+                <span class="streak-label">Day of Journey</span>
+            </div>
+            <div class="streak-divider"></div>
+            <div class="streak-item">
+                <span class="streak-icon">💪</span>
+                <span class="streak-value" id="total-workouts">0</span>
+                <span class="streak-label">Workouts Done</span>
+            </div>
+            <div class="streak-divider"></div>
+            <div class="streak-item" onclick="window.location.href='/progress'" style="cursor:pointer;">
+                <span class="streak-icon">➕</span>
+                <span class="streak-label" style="color:#0078ff;">Log Today</span>
+            </div>
+        </div>
+
+        <!-- Fast Onboarding Banner (shows only for new users) -->
+        <div class="onboarding-banner" id="onboarding-banner" style="display:none;">
+            <div class="onboarding-text">
+                <span>👋 Welcome! Get your first workout in 10 seconds →</span>
+            </div>
+            <div class="onboarding-btns">
+                <button onclick="quickStart('weight_loss')" class="quick-btn">🔥 Lose Weight</button>
+                <button onclick="quickStart('muscle_gain')" class="quick-btn">💪 Build Muscle</button>
+                <button onclick="quickStart('general_fitness')" class="quick-btn">⚡ Stay Fit</button>
+                <button onclick="document.getElementById('onboarding-banner').style.display='none'" class="quick-btn-close">✕</button>
             </div>
         </div>
 
@@ -78,7 +111,7 @@
                     <div class="bot-avatar">F</div>
                     <div class="message-content">
                         👋 Welcome back <strong>{{ username }}</strong>! I am FitBot, your personal AI fitness coach.<br><br>
-                        Type your question, speak 🎤, or show me a photo 📸 of your food or exercise!
+                        Type your question, speak 🎤, or show me a photo 📸!
                     </div>
                 </div>
             </div>
@@ -97,7 +130,7 @@
                 <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
                 <input type="text" id="user-input" placeholder="Ask me about workouts, diet, fitness..." onkeypress="handleKey(event)"/>
                 <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
-                <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice OFF — click to turn on">🔇</button>
+                <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice OFF">🔇</button>
                 <button class="send-btn" onclick="sendMessage()">Send 💪</button>
             </div>
         </div>

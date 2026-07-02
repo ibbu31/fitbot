@@ -1,5 +1,70 @@
 let selectedImage = null;
 let voiceEnabled = false;
+// ==================
+// LOAD USER STATS (streak, day, workouts)
+// ==================
+async function loadUserStats() {
+    try {
+        const response = await fetch('/api/user-stats');
+        const data = await response.json();
+
+        // Update streak
+        const streakEl = document.getElementById('streak-count');
+        const dayEl = document.getElementById('day-number');
+        const workoutsEl = document.getElementById('total-workouts');
+        const streakBar = document.getElementById('streak-bar');
+
+        if (streakEl) streakEl.textContent = data.streak || 0;
+        if (dayEl) dayEl.textContent = data.day_number || 1;
+        if (workoutsEl) workoutsEl.textContent = data.total_workouts || 0;
+
+        // Animate fire if streak > 0
+        if (data.streak > 0 && streakBar) {
+            streakBar.classList.add('streak-on');
+        }
+
+        // Show onboarding banner for new users (day 1, no workouts)
+        const banner = document.getElementById('onboarding-banner');
+        if (banner && data.day_number <= 3 && data.total_workouts === 0) {
+            banner.style.display = 'flex';
+        }
+
+    } catch (e) {
+        console.log('Stats load error:', e);
+    }
+}
+
+// ==================
+// QUICK START — fast first workout
+// ==================
+function quickStart(goal) {
+    document.getElementById('onboarding-banner').style.display = 'none';
+
+    const messages = {
+        weight_loss: "I want to lose weight. I'm a beginner with no equipment. Give me a quick 7-day workout plan to start TODAY!",
+        muscle_gain: "I want to build muscle. I'm a beginner. Give me a workout plan to start TODAY!",
+        general_fitness: "I want to get fit and healthy. Give me a simple workout plan to start TODAY!"
+    };
+
+    document.getElementById('user-input').value = messages[goal] || messages.general_fitness;
+    sendMessage();
+}
+
+// Load stats when page opens
+window.addEventListener('load', () => {
+    loadUserStats();
+
+    // Check for pre-filled message from exercise page
+    const msg = sessionStorage.getItem('fitbot_message');
+    if (msg) {
+        sessionStorage.removeItem('fitbot_message');
+        const input = document.getElementById('user-input');
+        if (input) {
+            input.value = msg;
+            setTimeout(() => sendMessage(), 800);
+        }
+    }
+});
 
 // ==================
 // SEND MESSAGE
@@ -208,57 +273,130 @@ function clearImage() {
     const input = document.getElementById('camera-input');
     if (input) input.value = '';
 }
-
 // ==================
-// PDF DOWNLOAD
+// PDF DOWNLOAD 
 // ==================
 async function downloadPDF() {
     const chatBox = document.getElementById('chat-box');
-    const messages = chatBox.querySelectorAll('.bot-message .message-content');
+    const allBotMessages = chatBox.querySelectorAll('.bot-message .message-content');
 
-    if (messages.length === 0) {
-        alert('No workout plan to download yet! Ask FitBot for a workout first. 💪');
+    if (allBotMessages.length === 0) {
+        alert('No workout plan yet! Ask FitBot for a workout plan first. 💪');
         return;
     }
 
-    const lastMessage = messages[messages.length - 1].innerText;
-    const lines = lastMessage.split('\n').filter(l => l.trim());
-    const exercises = [];
+    // Collect ALL bot messages into one text
+    let fullChatText = '';
+    allBotMessages.forEach(msg => {
+        fullChatText += msg.innerText + '\n\n';
+    });
 
-    lines.forEach(line => {
-        if (line.includes('sets') || line.includes('reps') || line.match(/\d+x\d+/)) {
-            exercises.push({
-                name: line.split('—')[0].replace(/[•\-*✅💪🏋️]/g, '').trim(),
-                sets: '3',
-                reps: '10-12',
-                rest: '60s'
-            });
+    // Parse exercises from text
+    const exercises = parseExercises(fullChatText);
+
+    // Also get the full plan text for the PDF
+    const planText = fullChatText.substring(0, 3000);
+
+    const btn = document.querySelector('.pdf-btn');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Generating PDF...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                workout_plan: exercises,
+                plan_text: planText,
+                plan_type: 'Workout Plan'
+            })
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'fitbot_workout_plan.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            btn.textContent = '✅ Downloaded!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            throw new Error('PDF generation failed');
         }
-    });
-
-    const response = await fetch('/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            workout_plan: exercises.length > 0 ? exercises : [
-                { name: 'See your FitBot chat for full plan', sets: '--', reps: '--', rest: '--' }
-            ],
-            plan_type: 'Workout Plan'
-        })
-    });
-
-    if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'fitbot_workout_plan.pdf';
-        a.click();
-    } else {
+    } catch (error) {
         alert('Could not generate PDF. Please try again!');
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 }
 
+// Parse exercises from chat text
+function parseExercises(text) {
+    const exercises = [];
+    const lines = text.split('\n');
+
+    lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+
+        // Skip header lines
+        if (line.startsWith('👋') || line.startsWith('Welcome')) return;
+
+        // Match patterns like:
+        // • Push Up — 3 sets x 12 reps (60s rest)
+        // Push Up: 3 sets, 12 reps
+        // 1. Push Up - 3x12
+        // • Push Up — 3 x 12
+
+        const exercisePatterns = [
+            // Pattern: • Exercise — 3 sets x 12 reps (60s)
+            /[•\-\*]\s*([A-Za-z\s]+?)[—\-:]\s*(\d+)\s*(?:sets?|x)\s*[x×]\s*(\d+[-\d]*)\s*(?:reps?)?(?:\s*[\(\[]([^\)\]]+)[\)\]])?/i,
+            // Pattern: Exercise — 3 x 12 reps
+            /([A-Za-z][A-Za-z\s]{2,30}?)\s*[—\-]\s*(\d+)\s*[x×]\s*(\d+[-\d]*)\s*(?:reps?)?/i,
+            // Pattern: Exercise: sets x reps
+            /([A-Za-z][A-Za-z\s]{2,30}?):\s*(\d+)\s*(?:sets?)?\s*[x×,]\s*(\d+[-\d]*)\s*(?:reps?)?/i,
+        ];
+
+        for (const pattern of exercisePatterns) {
+            const match = line.match(pattern);
+            if (match) {
+                const name = match[1].replace(/[•\-\*\d\.]/g, '').trim();
+                if (name.length > 2 && name.length < 50) {
+                    exercises.push({
+                        name: name,
+                        sets: match[2] || '3',
+                        reps: match[3] || '10-12',
+                        rest: match[4] || '60s'
+                    });
+                }
+                break;
+            }
+        }
+    });
+
+    // If no exercises parsed, create entries from bullet points
+    if (exercises.length === 0) {
+        lines.forEach(line => {
+            line = line.trim();
+            if ((line.startsWith('•') || line.startsWith('-') || line.match(/^\d+\./)) && line.length > 5 && line.length < 100) {
+                const name = line.replace(/^[•\-\*\d\.]\s*/, '').split('—')[0].split(':')[0].trim();
+                if (name.length > 2) {
+                    exercises.push({ name: name, sets: '3', reps: '10-12', rest: '60s' });
+                }
+            }
+        });
+    }
+
+    return exercises.slice(0, 20); // Max 20 exercises
+}
 // ==================
 // ENTER KEY
 // ==================
@@ -276,5 +414,9 @@ window.addEventListener('load', () => {
             input.value = msg;
             setTimeout(() => sendMessage(), 500);
         }
+        // Fetch exercise with GIF
+fetch('https://wger.de/api/v2/exercise/?format=json&language=2&category=10')
+    .then(r => r.json())
+    .then(data => console.log(data))
     }
 });
