@@ -169,63 +169,73 @@ def add_security_headers(response):
     return response
 
 @app.route("/")
-@login_required
 def home():
-    return render_template("index.html", username=session.get('username'))
-
+    # Allow guest users — no login required
+    username = session.get('username', None)
+    is_guest = username is None
+    return render_template("index.html",
+        username=username or 'Guest',
+        is_guest=is_guest)
 @app.route("/chat", methods=["POST"])
-@login_required
 @limiter.limit("20 per minute")
 def chat():
-    user_id = session['user_id']
-    username = session.get('username', 'there')
-
-    if not request.json:
-        return jsonify({'error': 'Invalid request'}), 400
-
     user_message = sanitize_input(request.json.get("message", ""))
     user_language = request.json.get("language", "en-US")
-
-    if user_language not in ["en-US", "hi-IN"]:
-        user_language = "en-US"
+    is_guest = request.json.get("is_guest", False)
 
     if not user_message:
         return jsonify({'error': 'Empty message'}), 400
 
+    if user_language not in ["en-US", "hi-IN"]:
+        user_language = "en-US"
+
     language_instruction = "Hindi" if user_language == "hi-IN" else "English"
-    system_with_language = SYSTEM_PROMPT + f"\n\nIMPORTANT: Reply in {language_instruction} only. Address the user as {username}."
 
-    try:
-        conn = get_db()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(
-            'SELECT role, message FROM chat_history WHERE user_id = %s ORDER BY created_at DESC LIMIT 20',
-            (user_id,)
-        )
-        history = cursor.fetchall()
-        messages = [{"role": row['role'], "content": row['message']} for row in reversed(history)]
-        messages.append({"role": "user", "content": user_message})
+    # For logged in users — use full personalized system
+    if not is_guest and 'user_id' in session:
+        user_id = session['user_id']
+        username = session.get('username', 'there')
+        system_with_language = SYSTEM_PROMPT + f"\n\nIMPORTANT: Reply in {language_instruction} only. Address the user as {username}."
 
-        bot_reply = call_groq_with_retry(messages, system_with_language)
+        try:
+            conn = get_db()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor.execute(
+                'SELECT role, message FROM chat_history WHERE user_id = %s ORDER BY created_at DESC LIMIT 20',
+                (user_id,)
+            )
+            history = cursor.fetchall()
+            messages = [{"role": row['role'], "content": row['message']} for row in reversed(history)]
+            messages.append({"role": "user", "content": user_message})
+
+            bot_reply = call_groq_with_retry(messages, system_with_language)
+            bot_reply_clean = bleach.clean(bot_reply, tags=ALLOWED_TAGS, strip=True)
+
+            cursor.execute(
+                'INSERT INTO chat_history (user_id, role, message) VALUES (%s, %s, %s)',
+                (user_id, 'user', user_message)
+            )
+            cursor.execute(
+                'INSERT INTO chat_history (user_id, role, message) VALUES (%s, %s, %s)',
+                (user_id, 'assistant', bot_reply_clean)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            print(f"Chat error: {e}")
+            return jsonify({'error': 'Something went wrong. Please try again!'}), 500
+
+        return jsonify({"reply": bot_reply_clean})
+
+    # Guest user — limited chat, no history saved
+    else:
+        guest_prompt = SYSTEM_PROMPT + f"\n\nIMPORTANT: Reply in {language_instruction} only. Keep response short and impressive — this is a preview for a guest user. End your reply with a single line: 'Sign up free to get your full personalized plan! 💪'"
+        messages = [{"role": "user", "content": user_message}]
+        bot_reply = call_groq_with_retry(messages, guest_prompt)
         bot_reply_clean = bleach.clean(bot_reply, tags=ALLOWED_TAGS, strip=True)
-
-        cursor.execute(
-            'INSERT INTO chat_history (user_id, role, message) VALUES (%s, %s, %s)',
-            (user_id, 'user', user_message)
-        )
-        cursor.execute(
-            'INSERT INTO chat_history (user_id, role, message) VALUES (%s, %s, %s)',
-            (user_id, 'assistant', bot_reply_clean)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-    except Exception as e:
-        print(f"Chat error: {e}")
-        return jsonify({'error': 'Something went wrong. Please try again!'}), 500
-
-    return jsonify({"reply": bot_reply_clean})
+        return jsonify({"reply": bot_reply_clean, "is_guest": True})
 
 @app.route("/progress/add", methods=["POST"])
 @login_required

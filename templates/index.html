@@ -14,22 +14,6 @@
         gtag('config', 'G-T2KGPJJ2E3');
     </script>
 </head>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FitBot - AI Fitness Coach</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2KGPJJ2E3"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-T2KGPJJ2E3');
-    </script>
-</head>
 <body>
     <div class="bg-overlay"></div>
     <div class="main-wrapper">
@@ -44,15 +28,48 @@
                 </div>
             </div>
             <div class="user-info">
-                <div class="user-avatar">{{ username[0].upper() }}</div>
-                <span class="username">{{ username }}</span>
-                <a href="/exercises" class="nav-btn">🏋️ Exercises</a>
-                <a href="/progress" class="nav-btn">📊 Progress</a>
-                <a href="/logout" class="logout-btn">Logout</a>
+                {% if is_guest %}
+                    <a href="/login" class="nav-btn">🔑 Login</a>
+                    <a href="/register" class="logout-btn" style="background:#0078ff;color:white;border-color:#0078ff;">Sign Up Free</a>
+                {% else %}
+                    <div class="user-avatar">{{ username[0].upper() }}</div>
+                    <span class="username">{{ username }}</span>
+                    <a href="/exercises" class="nav-btn">🏋️ Exercises</a>
+                    <a href="/progress" class="nav-btn">📊 Progress</a>
+                    <a href="/logout" class="logout-btn">Logout</a>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Streak & Journey Bar -->
+        <!-- Hero -->
+        <div class="hero">
+            <h2>Your Personal <span>AI Trainer</span></h2>
+            <p>Get personalized workout plans, diet tips and fitness advice — completely free</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Free</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Available</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">AI</span>
+                    <span class="stat-label">Powered</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guest bar OR Streak bar -->
+        {% if is_guest %}
+        <div class="guest-bar" id="guest-bar">
+            <span>🎁 Try FitBot free — <strong id="msgs-left">5</strong> free messages left</span>
+            <a href="/register" class="guest-signup-btn">Sign Up for Unlimited 💪</a>
+        </div>
+        {% else %}
         <div class="streak-bar" id="streak-bar">
             <div class="streak-item">
                 <span class="streak-icon">🔥</span>
@@ -77,19 +94,7 @@
                 <span class="streak-label" style="color:#0078ff;">Log Today</span>
             </div>
         </div>
-
-        <!-- Fast Onboarding Banner (shows only for new users) -->
-        <div class="onboarding-banner" id="onboarding-banner" style="display:none;">
-            <div class="onboarding-text">
-                <span>👋 Welcome! Get your first workout in 10 seconds →</span>
-            </div>
-            <div class="onboarding-btns">
-                <button onclick="quickStart('weight_loss')" class="quick-btn">🔥 Lose Weight</button>
-                <button onclick="quickStart('muscle_gain')" class="quick-btn">💪 Build Muscle</button>
-                <button onclick="quickStart('general_fitness')" class="quick-btn">⚡ Stay Fit</button>
-                <button onclick="document.getElementById('onboarding-banner').style.display='none'" class="quick-btn-close">✕</button>
-            </div>
-        </div>
+        {% endif %}
 
         <!-- Chat Container -->
         <div class="chat-container">
@@ -110,27 +115,43 @@
                 <div class="message bot-message">
                     <div class="bot-avatar">F</div>
                     <div class="message-content">
-                        👋 Welcome back <strong>{{ username }}</strong>! I am FitBot, your personal AI fitness coach.<br><br>
-                        Type your question, speak 🎤, or show me a photo 📸!
+                        {% if is_guest %}
+                            👋 Hey! I am FitBot, your FREE AI fitness coach!<br><br>
+                            Ask me anything about workouts, diet, or fitness —
+                            <strong>no signup needed</strong> to try! 💪
+                        {% else %}
+                            👋 Welcome back <strong>{{ username }}</strong>!
+                            I am FitBot, your personal AI fitness coach.<br><br>
+                            Type your question, speak 🎤, or show me a photo 📸!
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
+            <!-- Image Preview -->
             <div id="image-preview-container" style="display:none;padding:10px 16px;background:rgba(0,120,255,0.03);border-top:1px solid rgba(0,120,255,0.1);">
                 <img id="image-preview" style="max-width:150px;border-radius:8px;"/>
                 <button onclick="clearImage()" style="margin-left:10px;background:#0078ff;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button>
             </div>
 
+            <!-- PDF bar - only for logged in users -->
+            {% if not is_guest %}
             <div class="pdf-bar">
                 <button onclick="downloadPDF()" class="pdf-btn">📄 Download Plan as PDF</button>
             </div>
+            {% endif %}
 
+            <!-- Input Area -->
             <div class="input-area">
+                {% if not is_guest %}
                 <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)"/>
                 <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
+                {% endif %}
                 <input type="text" id="user-input" placeholder="Ask me about workouts, diet, fitness..." onkeypress="handleKey(event)"/>
+                {% if not is_guest %}
                 <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
                 <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice OFF">🔇</button>
+                {% endif %}
                 <button class="send-btn" onclick="sendMessage()">Send 💪</button>
             </div>
         </div>
@@ -145,17 +166,58 @@
                 <span class="feature-icon">🥗</span>
                 <span>Diet & Nutrition</span>
             </div>
-            <div class="feature-card" onclick="window.location.href='/exercises'">
+            <div class="feature-card" onclick="handleExercisesClick()">
                 <span class="feature-icon">🎬</span>
-                <span>Exercises</span>
+                <span>Exercises {% if is_guest %}🔒{% endif %}</span>
             </div>
-            <div class="feature-card" onclick="startVoice()">
+            <div class="feature-card" onclick="handleVoiceClick()">
                 <span class="feature-icon">🎤</span>
-                <span>Voice Input</span>
+                <span>Voice {% if is_guest %}🔒{% endif %}</span>
             </div>
         </div>
 
     </div>
+
+    <!-- Signup Popup Modal -->
+    <div class="signup-modal" id="signup-modal">
+        <div class="signup-modal-content">
+            <div class="signup-modal-icon">🏋️</div>
+            <h2>You're loving FitBot! 🔥</h2>
+            <p>Sign up free to unlock:</p>
+            <div class="signup-features">
+                <div class="signup-feature">✅ Unlimited AI conversations</div>
+                <div class="signup-feature">✅ Save your workout history</div>
+                <div class="signup-feature">✅ Voice input in Hindi & English</div>
+                <div class="signup-feature">✅ Exercise library with guides</div>
+                <div class="signup-feature">✅ Progress tracking & streaks</div>
+                <div class="signup-feature">✅ Download workout plans as PDF</div>
+            </div>
+            <a href="/register" class="signup-modal-btn">Create Free Account 💪</a>
+            <a href="/login" class="signup-modal-login">Already have an account? Login</a>
+            <button onclick="closeSignupPopup()" class="signup-modal-close">Maybe later</button>
+        </div>
+    </div>
+
+    <!-- JS variables — safe way to pass Jinja2 values -->
+    <script>
+    const IS_GUEST = "{{ 'guest' if is_guest else 'user' }}" === "guest";
+    const MAX_GUEST_MESSAGES = 5;
+        function handleExercisesClick() {
+            if (IS_GUEST) {
+                showSignupPopup();
+            } else {
+                window.location.href = '/exercises';
+            }
+        }
+
+        function handleVoiceClick() {
+            if (IS_GUEST) {
+                showSignupPopup();
+            } else {
+                startVoice();
+            }
+        }
+    </script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

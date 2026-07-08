@@ -1,70 +1,6 @@
 let selectedImage = null;
 let voiceEnabled = false;
-// ==================
-// LOAD USER STATS (streak, day, workouts)
-// ==================
-async function loadUserStats() {
-    try {
-        const response = await fetch('/api/user-stats');
-        const data = await response.json();
-
-        // Update streak
-        const streakEl = document.getElementById('streak-count');
-        const dayEl = document.getElementById('day-number');
-        const workoutsEl = document.getElementById('total-workouts');
-        const streakBar = document.getElementById('streak-bar');
-
-        if (streakEl) streakEl.textContent = data.streak || 0;
-        if (dayEl) dayEl.textContent = data.day_number || 1;
-        if (workoutsEl) workoutsEl.textContent = data.total_workouts || 0;
-
-        // Animate fire if streak > 0
-        if (data.streak > 0 && streakBar) {
-            streakBar.classList.add('streak-on');
-        }
-
-        // Show onboarding banner for new users (day 1, no workouts)
-        const banner = document.getElementById('onboarding-banner');
-        if (banner && data.day_number <= 3 && data.total_workouts === 0) {
-            banner.style.display = 'flex';
-        }
-
-    } catch (e) {
-        console.log('Stats load error:', e);
-    }
-}
-
-// ==================
-// QUICK START — fast first workout
-// ==================
-function quickStart(goal) {
-    document.getElementById('onboarding-banner').style.display = 'none';
-
-    const messages = {
-        weight_loss: "I want to lose weight. I'm a beginner with no equipment. Give me a quick 7-day workout plan to start TODAY!",
-        muscle_gain: "I want to build muscle. I'm a beginner. Give me a workout plan to start TODAY!",
-        general_fitness: "I want to get fit and healthy. Give me a simple workout plan to start TODAY!"
-    };
-
-    document.getElementById('user-input').value = messages[goal] || messages.general_fitness;
-    sendMessage();
-}
-
-// Load stats when page opens
-window.addEventListener('load', () => {
-    loadUserStats();
-
-    // Check for pre-filled message from exercise page
-    const msg = sessionStorage.getItem('fitbot_message');
-    if (msg) {
-        sessionStorage.removeItem('fitbot_message');
-        const input = document.getElementById('user-input');
-        if (input) {
-            input.value = msg;
-            setTimeout(() => sendMessage(), 800);
-        }
-    }
-});
+let guestMessageCount = parseInt(localStorage.getItem('fitbot_guest_msgs') || '0');
 
 // ==================
 // SEND MESSAGE
@@ -76,6 +12,17 @@ function sendMessage() {
 
     if (!message && !selectedImage) return;
 
+    // Guest message limit check
+    if (IS_GUEST) {
+        if (guestMessageCount >= MAX_GUEST_MESSAGES) {
+            showSignupPopup();
+            return;
+        }
+        guestMessageCount++;
+        localStorage.setItem('fitbot_guest_msgs', guestMessageCount);
+        updateGuestCounter();
+    }
+
     if (message) {
         chatBox.innerHTML += `
             <div class="message user-message">
@@ -83,6 +30,7 @@ function sendMessage() {
             </div>`;
     }
 
+    let imagePayload = selectedImage;
     if (selectedImage) {
         chatBox.innerHTML += `
             <div class="message user-message">
@@ -98,15 +46,17 @@ function sendMessage() {
     chatBox.innerHTML += `<div class="typing" id="typing">FitBot is thinking... 💭</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const selectedLang = document.getElementById('lang-select').value;
+    const selectedLang = document.getElementById('lang-select') ?
+        document.getElementById('lang-select').value : 'en-US';
 
     fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             message: message || "I am sending you an image",
-            image: selectedImage,
-            language: selectedLang
+            image: imagePayload,
+            language: selectedLang,
+            is_guest: IS_GUEST
         })
     })
     .then(response => response.json())
@@ -122,7 +72,12 @@ function sendMessage() {
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        if (voiceEnabled) speakText(data.reply);
+        if (voiceEnabled && !IS_GUEST) speakText(data.reply);
+
+        // Show signup popup after last free message
+        if (IS_GUEST && guestMessageCount >= MAX_GUEST_MESSAGES) {
+            setTimeout(() => showSignupPopup(), 2000);
+        }
     })
     .catch(error => {
         const typingEl = document.getElementById('typing');
@@ -133,6 +88,31 @@ function sendMessage() {
                 <div class="message-content">❌ Something went wrong. Please try again!</div>
             </div>`;
     });
+}
+
+// Update guest counter display
+function updateGuestCounter() {
+    const el = document.getElementById('msgs-left');
+    if (el) {
+        const left = Math.max(0, MAX_GUEST_MESSAGES - guestMessageCount);
+        el.textContent = left;
+        if (left === 0) {
+            el.style.color = '#ff4444';
+        } else if (left === 1) {
+            el.style.color = '#f59e0b';
+        }
+    }
+}
+
+// ==================
+// SIGNUP POPUP
+// ==================
+function showSignupPopup() {
+    document.getElementById('signup-modal').classList.add('open');
+}
+
+function closeSignupPopup() {
+    document.getElementById('signup-modal').classList.remove('open');
 }
 
 // Quick message from feature cards
@@ -161,31 +141,25 @@ function formatMessage(text) {
 // VOICE INPUT
 // ==================
 function startVoice() {
+    if (IS_GUEST) { showSignupPopup(); return; }
     const micBtn = document.getElementById('mic-btn');
     window.speechSynthesis.cancel();
-
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert('Voice input not supported! Please use Google Chrome.');
         return;
     }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     const selectedLang = document.getElementById('lang-select').value;
-
     recognition.lang = selectedLang;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.continuous = false;
-
     try {
         recognition.start();
         micBtn.classList.add('recording');
         micBtn.innerText = '🔴';
-    } catch(e) {
-        console.error("Recognition error:", e);
-    }
-
+    } catch(e) { console.error(e); }
     recognition.onresult = function(event) {
         const transcript = event.results[0][0].transcript;
         document.getElementById('user-input').value = transcript;
@@ -193,15 +167,10 @@ function startVoice() {
         micBtn.innerText = '🎤';
         sendMessage();
     };
-
-    recognition.onerror = function(event) {
+    recognition.onerror = function() {
         micBtn.classList.remove('recording');
         micBtn.innerText = '🎤';
-        if (event.error === 'not-allowed') {
-            alert('Microphone access denied! Please allow microphone in Chrome settings.');
-        }
     };
-
     recognition.onend = function() {
         micBtn.classList.remove('recording');
         micBtn.innerText = '🎤';
@@ -209,20 +178,19 @@ function startVoice() {
 }
 
 // ==================
-// VOICE OUTPUT — only when user turns ON
+// VOICE OUTPUT
 // ==================
 function toggleVoice() {
+    if (IS_GUEST) { showSignupPopup(); return; }
     voiceEnabled = !voiceEnabled;
     const btn = document.getElementById('voice-toggle-btn');
     if (voiceEnabled) {
         btn.innerText = '🔊';
-        btn.title = 'Voice ON — click to turn off';
         btn.style.background = 'rgba(0,120,255,0.3)';
         btn.style.borderColor = '#0078ff';
     } else {
         window.speechSynthesis.cancel();
         btn.innerText = '🔇';
-        btn.title = 'Voice OFF — click to turn on';
         btn.style.background = '';
         btn.style.borderColor = '';
     }
@@ -231,23 +199,15 @@ function toggleVoice() {
 function speakText(text) {
     const selectedLang = document.getElementById('lang-select').value;
     let cleanText = text
-        .replace(/#{1,6}\s/g, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/`(.*?)`/g, '$1')
-        .replace(/\d+\.\s/g, '')
-        .replace(/[-•]\s/g, '')
-        .replace(/[🏋💪🔥🎯🥗📸🎤✅❌👋⚡💎🏃]/g, '')
-        .replace(/\n+/g, '. ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 300);
-
+        .replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')
+        .replace(/\d+\.\s/g, '').replace(/[-•]\s/g, '')
+        .replace(/[🏋💪🔥🎯🥗📸🎤✅❌👋⚡]/g, '')
+        .replace(/\n+/g, '. ').replace(/\s+/g, ' ').trim().substring(0, 300);
     window.speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(cleanText);
     speech.lang = selectedLang;
     speech.rate = 1.0;
-    speech.pitch = 1;
     window.speechSynthesis.speak(speech);
 }
 
@@ -255,6 +215,7 @@ function speakText(text) {
 // IMAGE/CAMERA
 // ==================
 function handleImage(event) {
+    if (IS_GUEST) { showSignupPopup(); return; }
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -273,46 +234,31 @@ function clearImage() {
     const input = document.getElementById('camera-input');
     if (input) input.value = '';
 }
+
 // ==================
-// PDF DOWNLOAD 
+// PDF DOWNLOAD
 // ==================
 async function downloadPDF() {
+    if (IS_GUEST) { showSignupPopup(); return; }
     const chatBox = document.getElementById('chat-box');
     const allBotMessages = chatBox.querySelectorAll('.bot-message .message-content');
-
     if (allBotMessages.length === 0) {
-        alert('No workout plan yet! Ask FitBot for a workout plan first. 💪');
+        alert('Ask FitBot for a workout plan first! 💪');
         return;
     }
-
-    // Collect ALL bot messages into one text
     let fullChatText = '';
-    allBotMessages.forEach(msg => {
-        fullChatText += msg.innerText + '\n\n';
-    });
-
-    // Parse exercises from text
+    allBotMessages.forEach(msg => { fullChatText += msg.innerText + '\n\n'; });
     const exercises = parseExercises(fullChatText);
-
-    // Also get the full plan text for the PDF
-    const planText = fullChatText.substring(0, 3000);
-
     const btn = document.querySelector('.pdf-btn');
     const originalText = btn.textContent;
     btn.textContent = '⏳ Generating PDF...';
     btn.disabled = true;
-
     try {
         const response = await fetch('/generate-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                workout_plan: exercises,
-                plan_text: planText,
-                plan_type: 'Workout Plan'
-            })
+            body: JSON.stringify({ workout_plan: exercises, plan_text: fullChatText.substring(0, 3000), plan_type: 'Workout Plan' })
         });
-
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -322,81 +268,59 @@ async function downloadPDF() {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
             btn.textContent = '✅ Downloaded!';
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }, 2000);
-        } else {
-            throw new Error('PDF generation failed');
+            setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
         }
-    } catch (error) {
-        alert('Could not generate PDF. Please try again!');
+    } catch (e) {
         btn.textContent = originalText;
         btn.disabled = false;
+        alert('Could not generate PDF. Please try again!');
     }
 }
 
-// Parse exercises from chat text
 function parseExercises(text) {
     const exercises = [];
     const lines = text.split('\n');
-
     lines.forEach(line => {
         line = line.trim();
         if (!line) return;
-
-        // Skip header lines
-        if (line.startsWith('👋') || line.startsWith('Welcome')) return;
-
-        // Match patterns like:
-        // • Push Up — 3 sets x 12 reps (60s rest)
-        // Push Up: 3 sets, 12 reps
-        // 1. Push Up - 3x12
-        // • Push Up — 3 x 12
-
-        const exercisePatterns = [
-            // Pattern: • Exercise — 3 sets x 12 reps (60s)
-            /[•\-\*]\s*([A-Za-z\s]+?)[—\-:]\s*(\d+)\s*(?:sets?|x)\s*[x×]\s*(\d+[-\d]*)\s*(?:reps?)?(?:\s*[\(\[]([^\)\]]+)[\)\]])?/i,
-            // Pattern: Exercise — 3 x 12 reps
-            /([A-Za-z][A-Za-z\s]{2,30}?)\s*[—\-]\s*(\d+)\s*[x×]\s*(\d+[-\d]*)\s*(?:reps?)?/i,
-            // Pattern: Exercise: sets x reps
-            /([A-Za-z][A-Za-z\s]{2,30}?):\s*(\d+)\s*(?:sets?)?\s*[x×,]\s*(\d+[-\d]*)\s*(?:reps?)?/i,
+        const patterns = [
+            /[•\-\*]\s*([A-Za-z\s]+?)[—\-:]\s*(\d+)\s*(?:sets?|x)\s*[x×]\s*(\d+[-\d]*)/i,
+            /([A-Za-z][A-Za-z\s]{2,30}?)\s*[—\-]\s*(\d+)\s*[x×]\s*(\d+[-\d]*)/i,
         ];
-
-        for (const pattern of exercisePatterns) {
+        for (const pattern of patterns) {
             const match = line.match(pattern);
             if (match) {
                 const name = match[1].replace(/[•\-\*\d\.]/g, '').trim();
                 if (name.length > 2 && name.length < 50) {
-                    exercises.push({
-                        name: name,
-                        sets: match[2] || '3',
-                        reps: match[3] || '10-12',
-                        rest: match[4] || '60s'
-                    });
+                    exercises.push({ name, sets: match[2] || '3', reps: match[3] || '10-12', rest: '60s' });
                 }
                 break;
             }
         }
     });
-
-    // If no exercises parsed, create entries from bullet points
-    if (exercises.length === 0) {
-        lines.forEach(line => {
-            line = line.trim();
-            if ((line.startsWith('•') || line.startsWith('-') || line.match(/^\d+\./)) && line.length > 5 && line.length < 100) {
-                const name = line.replace(/^[•\-\*\d\.]\s*/, '').split('—')[0].split(':')[0].trim();
-                if (name.length > 2) {
-                    exercises.push({ name: name, sets: '3', reps: '10-12', rest: '60s' });
-                }
-            }
-        });
-    }
-
-    return exercises.slice(0, 20); // Max 20 exercises
+    return exercises.slice(0, 20);
 }
+
+// ==================
+// LOAD USER STATS
+// ==================
+async function loadUserStats() {
+    if (IS_GUEST) return;
+    try {
+        const response = await fetch('/api/user-stats');
+        const data = await response.json();
+        const streakEl = document.getElementById('streak-count');
+        const dayEl = document.getElementById('day-number');
+        const workoutsEl = document.getElementById('total-workouts');
+        const streakBar = document.getElementById('streak-bar');
+        if (streakEl) streakEl.textContent = data.streak || 0;
+        if (dayEl) dayEl.textContent = data.day_number || 1;
+        if (workoutsEl) workoutsEl.textContent = data.total_workouts || 0;
+        if (data.streak > 0 && streakBar) streakBar.classList.add('streak-on');
+    } catch (e) { console.log('Stats error:', e); }
+}
+
 // ==================
 // ENTER KEY
 // ==================
@@ -404,19 +328,24 @@ function handleKey(event) {
     if (event.key === 'Enter') sendMessage();
 }
 
-// Check for pre-filled message from exercise page
+// ==================
+// INIT
+// ==================
 window.addEventListener('load', () => {
+    loadUserStats();
+    updateGuestCounter();
+
+    // Pre-filled message from exercise page
     const msg = sessionStorage.getItem('fitbot_message');
     if (msg) {
         sessionStorage.removeItem('fitbot_message');
         const input = document.getElementById('user-input');
-        if (input) {
-            input.value = msg;
-            setTimeout(() => sendMessage(), 500);
-        }
+        if (input) { input.value = msg; setTimeout(() => sendMessage(), 800); }
+    }
+
         // Fetch exercise with GIF
 fetch('https://wger.de/api/v2/exercise/?format=json&language=2&category=10')
     .then(r => r.json())
     .then(data => console.log(data))
-    }
+    
 });
