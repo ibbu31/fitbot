@@ -551,30 +551,6 @@ def progress_page():
     except Exception as e:
         print(f"Progress error: {e}")
         return f"<h1>Error loading progress: {str(e)}</h1>", 500
-    try:
-        conn = get_db()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('''
-            SELECT * FROM password_resets
-            WHERE token = %s
-            AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 hour'
-        ''', (token,))
-        reset = cursor.fetchone()
-
-        if not reset:
-            return jsonify({'error': 'Reset link is invalid or expired!'}), 400
-
-        hashed = bcrypt.generate_password_hash(new_password).decode('utf-8')
-        cursor.execute('UPDATE users SET password = %s WHERE id = %s', (hashed, reset['user_id']))
-        cursor.execute('DELETE FROM password_resets WHERE token = %s', (token,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({'success': True, 'message': 'Password reset successfully!'})
-
-    except Exception as e:
-        print(f"Reset password error: {e}")
-        return jsonify({'error': 'Something went wrong. Please try again!'}), 500
 
 @app.route("/recovery-score", methods=["POST"])
 @login_required
@@ -617,7 +593,8 @@ def workout_api():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    # ==================
+
+# ==================
 # STREAK & JOURNEY API
 # ==================
 @app.route("/api/user-stats", methods=["GET"])
@@ -720,7 +697,7 @@ def send_reminders():
                         <h2 style="text-align:center;">Hey {user['username']}! Don't break your streak! 🔥</h2>
                         <p style="color:rgba(255,255,255,0.7);text-align:center;">You haven't logged your workout today. Your fitness journey is waiting!</p>
                         <div style="text-align:center;margin:30px 0;">
-                            <a href="https://fitbot-402357265699.us-central1.run.app" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Today's Workout 💪</a>
+                            <a href="https://fitbot-402357265699.asia-south1.run.app" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Today's Workout 💪</a>
                         </div>
                         <p style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.85rem;">Small steps every day lead to big results!</p>
                     </div>
