@@ -1,6 +1,6 @@
 let selectedImage = null;
 let voiceEnabled = false;
-let guestMessageCount = parseInt(localStorage.getItem('fitbot_guest_msgs') || '0');
+let guestMessageCount = parseInt(localStorage.getItem('mentro.fit_guest_msgs') || '0');
 
 // ==================
 // SEND MESSAGE
@@ -19,7 +19,7 @@ function sendMessage() {
             return;
         }
         guestMessageCount++;
-        localStorage.setItem('fitbot_guest_msgs', guestMessageCount);
+        localStorage.setItem('mentro.fit_guest_msgs', guestMessageCount);
         updateGuestCounter();
     }
 
@@ -42,9 +42,7 @@ function sendMessage() {
 
     input.value = '';
     clearImage();
-
-    chatBox.innerHTML += `<div class="typing" id="typing">FitBot is thinking... 💭</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+chatBox.innerHTML += `<div class="typing" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
 
     const selectedLang = document.getElementById('lang-select') ?
         document.getElementById('lang-select').value : 'en-US';
@@ -67,7 +65,7 @@ function sendMessage() {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message bot-message';
         msgDiv.innerHTML = `
-            <div class="bot-avatar">F</div>
+            <div class="bot-avatar">M</div>
             <div class="message-content">${formatMessage(data.reply)}</div>`;
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -84,7 +82,7 @@ function sendMessage() {
         if (typingEl) typingEl.remove();
         chatBox.innerHTML += `
             <div class="message bot-message">
-                <div class="bot-avatar">F</div>
+                <div class="bot-avatar">M</div>
                 <div class="message-content">❌ Something went wrong. Please try again!</div>
             </div>`;
     });
@@ -186,8 +184,8 @@ function toggleVoice() {
     const btn = document.getElementById('voice-toggle-btn');
     if (voiceEnabled) {
         btn.innerText = '🔊';
-        btn.style.background = 'rgba(0,120,255,0.3)';
-        btn.style.borderColor = '#0078ff';
+        btn.style.background = 'rgba(255,90,31,0.25)';
+        btn.style.borderColor = '#FF5A1F';
     } else {
         window.speechSynthesis.cancel();
         btn.innerText = '🔇';
@@ -195,7 +193,6 @@ function toggleVoice() {
         btn.style.borderColor = '';
     }
 }
-
 function speakText(text) {
     const selectedLang = document.getElementById('lang-select').value;
     let cleanText = text
@@ -208,6 +205,11 @@ function speakText(text) {
     const speech = new SpeechSynthesisUtterance(cleanText);
     speech.lang = selectedLang;
     speech.rate = 1.0;
+
+    // NOTE: the illustrated avatar element (#avatar-face) that this used
+    // to pulse while speaking was removed along with the rest of the
+    // avatar feature, so the speaking-state toggle has been removed too.
+
     window.speechSynthesis.speak(speech);
 }
 
@@ -243,83 +245,103 @@ async function downloadPDF() {
     const chatBox = document.getElementById('chat-box');
     const allBotMessages = chatBox.querySelectorAll('.bot-message .message-content');
     if (allBotMessages.length === 0) {
-        alert('Ask FitBot for a workout plan first! 💪');
+        alert('Ask Mentro for a workout plan first!');
         return;
     }
     let fullChatText = '';
     allBotMessages.forEach(msg => { fullChatText += msg.innerText + '\n\n'; });
     const exercises = parseExercises(fullChatText);
-    const btn = document.querySelector('.pdf-btn');
-    const originalText = btn.textContent;
-    btn.textContent = '⏳ Generating PDF...';
-    btn.disabled = true;
+ 
+    const card = document.getElementById('pdf-card');
+    const originalHTML = card.innerHTML;
+ 
+    // Step 1 — "generating" state, matches a document-creation flow
+    card.innerHTML = `
+        <button class="pdf-btn" disabled>
+            <span class="pdf-spinner"></span>
+            Creating your plan...
+        </button>`;
+ 
     try {
         const response = await fetch('/generate-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ workout_plan: exercises, plan_text: fullChatText.substring(0, 3000), plan_type: 'Workout Plan' })
         });
+ 
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'fitbot_workout_plan.pdf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            btn.textContent = '✅ Downloaded!';
-            setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+            const sizeKb = Math.max(1, Math.round(blob.size / 1024));
+            const filename = 'mentro_workout_plan.pdf';
+ 
+            // Step 2 — "file ready" card, like a generated-document result
+            card.innerHTML = `
+                <div class="pdf-file-ready">
+                    <div class="pdf-file-icon">PDF</div>
+                    <div class="pdf-file-info">
+                        <span class="pdf-file-name">${filename}</span>
+                        <span class="pdf-file-meta">${sizeKb} KB</span>
+                    </div>
+                    <button class="pdf-file-download-btn" id="pdf-save-btn">Save</button>
+                </div>`;
+ 
+            document.getElementById('pdf-save-btn').onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+ 
+            // Auto-trigger the first download immediately too
+            document.getElementById('pdf-save-btn').click();
+ 
+        } else {
+            throw new Error('PDF generation failed');
         }
     } catch (e) {
-        btn.textContent = originalText;
-        btn.disabled = false;
+        card.innerHTML = originalHTML;
         alert('Could not generate PDF. Please try again!');
     }
 }
-
-function parseExercises(text) {
-    const exercises = [];
-    const lines = text.split('\n');
-    lines.forEach(line => {
-        line = line.trim();
-        if (!line) return;
-        const patterns = [
-            /[•\-\*]\s*([A-Za-z\s]+?)[—\-:]\s*(\d+)\s*(?:sets?|x)\s*[x×]\s*(\d+[-\d]*)/i,
-            /([A-Za-z][A-Za-z\s]{2,30}?)\s*[—\-]\s*(\d+)\s*[x×]\s*(\d+[-\d]*)/i,
-        ];
-        for (const pattern of patterns) {
-            const match = line.match(pattern);
-            if (match) {
-                const name = match[1].replace(/[•\-\*\d\.]/g, '').trim();
-                if (name.length > 2 && name.length < 50) {
-                    exercises.push({ name, sets: match[2] || '3', reps: match[3] || '10-12', rest: '60s' });
-                }
-                break;
-            }
-        }
-    });
-    return exercises.slice(0, 20);
-}
-
 // ==================
 // LOAD USER STATS
 // ==================
 async function loadUserStats() {
-    if (IS_GUEST) return;
-    try {
-        const response = await fetch('/api/user-stats');
-        const data = await response.json();
-        const streakEl = document.getElementById('streak-count');
-        const dayEl = document.getElementById('day-number');
-        const workoutsEl = document.getElementById('total-workouts');
-        const streakBar = document.getElementById('streak-bar');
-        if (streakEl) streakEl.textContent = data.streak || 0;
-        if (dayEl) dayEl.textContent = data.day_number || 1;
-        if (workoutsEl) workoutsEl.textContent = data.total_workouts || 0;
-        if (data.streak > 0 && streakBar) streakBar.classList.add('streak-on');
-    } catch (e) { console.log('Stats error:', e); }
-}
+        if (IS_GUEST) return;
+        try {
+            const response = await fetch('/api/user-stats');
+            const data = await response.json();
+ 
+            const streak = data.streak || 0;
+            const weekly = data.weekly_workouts || 0;
+            const weeklyGoal = data.weekly_goal || 4;
+            const total = data.total_workouts || 0;
+ 
+            const streakEl = document.getElementById('streak-count');
+            const weeklyEl = document.getElementById('weekly-count');
+            const workoutsEl = document.getElementById('total-workouts');
+            if (streakEl) streakEl.textContent = streak;
+            if (weeklyEl) weeklyEl.textContent = weekly;
+            if (workoutsEl) workoutsEl.textContent = total;
+ 
+            // Ring circumference = 2 * PI * r(42) = ~264. Cap each ring's fill at 100%.
+            const CIRCUMFERENCE = 264;
+            setRingProgress('ring-streak', Math.min(streak / 7, 1), CIRCUMFERENCE);
+            setRingProgress('ring-weekly', Math.min(weekly / weeklyGoal, 1), CIRCUMFERENCE);
+            setRingProgress('ring-total', Math.min(total / 20, 1), CIRCUMFERENCE);
+        } catch (e) { console.log('Stats error:', e); }
+    }
+ 
+    function setRingProgress(elementId, fraction, circumference) {
+        const ring = document.getElementById(elementId);
+        if (!ring) return;
+        const offset = circumference - (fraction * circumference);
+        // Small delay so the fill animates in after page load, not instantly
+        setTimeout(() => { ring.style.strokeDashoffset = offset; }, 200);
+    }
 
 // ==================
 // ENTER KEY
@@ -343,9 +365,107 @@ window.addEventListener('load', () => {
         if (input) { input.value = msg; setTimeout(() => sendMessage(), 800); }
     }
 
-        // Fetch exercise with GIF
-fetch('https://wger.de/api/v2/exercise/?format=json&language=2&category=10')
-    .then(r => r.json())
-    .then(data => console.log(data))
-    
+    // NOTE: the leftover wger.de exercise-GIF fetch that used to run on
+    // every page load (and only logged its result to the console without
+    // using it) has been removed — it was a leftover from evaluating
+    // exercise-data APIs and just added an unnecessary network request
+    // on every load, which mattered more on mobile.
 });
+const quizAnswers = { goal: '', level: '', equipment: '', injuries: '' };
+let currentQuizStep = 1;
+const totalQuizSteps = 4;
+ 
+function selectQuizOption(btn, field) {
+    quizAnswers[field] = btn.dataset.value;
+ 
+    // Visual selected state
+    btn.parentElement.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    btn.classList.add('selected');
+ 
+    // Auto-advance after a short pause, or submit if last step
+    setTimeout(() => {
+        if (currentQuizStep < totalQuizSteps) {
+            goToQuizStep(currentQuizStep + 1);
+        } else {
+            submitOnboarding();
+        }
+    }, 350);
+}
+ 
+function goToQuizStep(step) {
+    document.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.quiz-step[data-step="${step}"]`).classList.add('active');
+ 
+    document.querySelectorAll('.quiz-dot').forEach(d => {
+        const dotStep = parseInt(d.dataset.step);
+        d.classList.remove('active', 'done');
+        if (dotStep === step) d.classList.add('active');
+        else if (dotStep < step) d.classList.add('done');
+    });
+ 
+    currentQuizStep = step;
+    document.getElementById('quiz-back-btn').style.display = step > 1 ? 'block' : 'none';
+}
+ 
+function quizBack() {
+    if (currentQuizStep > 1) goToQuizStep(currentQuizStep - 1);
+}
+ 
+function submitOnboarding() {
+    fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quizAnswers)
+    })
+    .then(r => r.json())
+    .then(() => {
+        const overlay = document.getElementById('quiz-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 300);
+        }
+        // Send an opening message so mentro.fit immediately responds using the new profile
+        setTimeout(() => {
+            const input = document.getElementById('user-input');
+            if (input) {
+                input.value = "Based on what I just told you, give me my first workout plan!";
+                sendMessage();
+            }
+        }, 400);
+    })
+    .catch(e => console.log('Onboarding save error:', e));
+}
+
+
+// ==================
+// REFERRAL LINK
+// ==================
+function copyReferralLink() {
+    const linkEl = document.getElementById('referral-link-display');
+    if (!linkEl) return;
+    const fullLink = 'https://' + linkEl.textContent.trim();
+    navigator.clipboard.writeText(fullLink).then(() => {
+        const btn = document.querySelector('.referral-copy-btn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied! ✓';
+        setTimeout(() => { btn.textContent = original; }, 1800);
+    }).catch(() => {
+        alert('Copy this link: ' + fullLink);
+    });
+}
+
+// ==================
+// PREMIUM WAITLIST
+// ==================
+function joinWaitlist() {
+    const btn = document.getElementById('waitlist-btn');
+    fetch('/api/join-waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.textContent = "✅ You're on the list!";
+                btn.disabled = true;
+            }
+        })
+        .catch(e => console.log('Waitlist error:', e));
+}

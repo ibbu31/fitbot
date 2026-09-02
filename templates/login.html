@@ -3,114 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitBot - Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <title>Mentro - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-surface: #141414;
+            --bg-surface-2: #1c1c1c;
+            --accent-1: #FF5A1F;
+            --accent-2: #FF7A47;
+            --accent-gradient: linear-gradient(135deg, #FF5A1F 0%, #FF7A47 100%);
+            --text-hi: #ffffff;
+            --text-mid: rgba(255, 255, 255, 0.6);
+            --text-low: rgba(255, 255, 255, 0.38);
+            --border-soft: rgba(255, 90, 31, 0.16);
+            --border-strong: rgba(255, 90, 31, 0.4);
+        }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
         body {
-            background: #000a1e;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 10, 30, 0.90);
-            z-index: 0;
+            padding: 20px;
+            background:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79, 107, 255, 0.16), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 100% 10%, rgba(139, 92, 246, 0.12), transparent 55%),
+                var(--bg-base);
         }
         .card {
             position: relative;
             z-index: 1;
-            background: rgba(0, 5, 20, 0.95);
-            border: 1px solid rgba(0, 120, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
+            background: rgba(19, 26, 43, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-soft);
+            border-radius: 24px;
+            padding: 42px 38px;
             width: 100%;
             max-width: 420px;
-            box-shadow: 0 8px 40px rgba(0, 120, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 8px;
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+        .logo-icon-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+        .logo-icon {
+            width: 52px; height: 52px;
+            background: var(--accent-gradient);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem; font-weight: 700; color: white;
+            box-shadow: 0 8px 30px rgba(79, 107, 255, 0.4);
         }
-        .logo h1 {
-            color: white;
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: 3px;
+        .logo { text-align: center; margin-bottom: 8px; }
+        .logo h1 { font-family: 'Space Grotesk', sans-serif; color: var(--text-hi); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; }
+        .logo h1 span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .logo h1 span { color: #0078ff; }
-        .logo p {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.75rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-        .divider {
-            height: 1px;
-            background: rgba(0, 120, 255, 0.2);
-            margin: 24px 0;
-        }
+        .logo p { color: var(--text-low); font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+
+        .divider { height: 1px; background: var(--border-soft); margin: 26px 0; }
         .form-group { margin-bottom: 20px; }
-        label {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.8rem;
-            display: block;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        label { color: var(--text-mid); font-size: 0.76rem; display: block; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
         input {
-            width: 100%;
-            padding: 13px 16px;
-            background: rgba(0, 120, 255, 0.05);
-            border: 1px solid rgba(0, 120, 255, 0.2);
-            border-radius: 10px;
-            color: white;
+            width: 100%; padding: 13px 16px;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            color: var(--text-hi);
             font-size: 0.95rem;
             outline: none;
-            transition: border 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        input:focus { border-color: #0078ff; background: rgba(0, 120, 255, 0.08); }
-        input::placeholder { color: rgba(255,255,255,0.25); }
-        button {
-            width: 100%;
-            padding: 14px;
-            background: #0078ff;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            margin-top: 8px;
             transition: all 0.2s;
-            box-shadow: 0 0 20px rgba(0, 120, 255, 0.3);
             font-family: 'Inter', sans-serif;
         }
-        button:hover { background: #0060cc; box-shadow: 0 0 30px rgba(0, 120, 255, 0.5); }
-        .error { color: #ff4444; font-size: 0.85rem; margin-top: 12px; text-align: center; display: none; }
-        .links { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
-        .links a { color: rgba(255,255,255,0.4); font-size: 0.85rem; text-decoration: none; transition: color 0.2s; }
-        .links a:hover { color: #0078ff; }
-        .links a span { color: #0078ff; }
+        input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(79, 107, 255, 0.15); }
+        input::placeholder { color: var(--text-low); }
+
+        button {
+            width: 100%; padding: 15px;
+            background: var(--accent-gradient);
+            color: white; border: none; border-radius: 14px;
+            font-size: 0.95rem; font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 26px rgba(79, 107, 255, 0.35);
+        }
+        button:hover { transform: scale(1.02); box-shadow: 0 10px 34px rgba(79, 107, 255, 0.5); }
+        button:active { transform: scale(0.98); }
+
+        .error { color: #ff6b6b; font-size: 0.85rem; margin-top: 14px; text-align: center; display: none; }
+        .links { margin-top: 22px; display: flex; flex-direction: column; gap: 11px; text-align: center; }
+        .links a { color: var(--text-low); font-size: 0.85rem; text-decoration: none; transition: color 0.2s; }
+        .links a:hover { color: var(--accent-1); }
+        .links a span { color: var(--accent-1); font-weight: 600; }
+
+        button:focus-visible, input:focus-visible, a:focus-visible {
+            outline: 2px solid var(--accent-1); outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
     <div class="card">
+        <div class="logo-icon-wrap"><div class="logo-icon">M</div></div>
         <div class="logo">
-            <h1>🏋️ Fit<span>Bot</span></h1>
+            <h1>Mentro</h1>
             <p>Your AI Fitness Coach</p>
         </div>
         <div class="divider"></div>

@@ -3,77 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitBot - Exercise Library</title>
+    <title>Mentro - Exercise Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
         body {
-            background: #000a1e;
+            background: #0a0a0a;
             min-height: 100vh;
-            color: white;
-            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
+            color: #ffffff;
+            }
         body::before {
             content: '';
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0, 10, 30, 0.93);
+            background: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255, 90, 31, 0.035), transparent 60%);
             z-index: 0;
         }
         .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,120,255,0.2); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .header h1 { font-size: 1.5rem; font-weight: 900; }
-        .header h1 span { color: #0078ff; }
-        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #0078ff; color: #0078ff; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
-        .back-btn:hover { background: #0078ff; color: white; }
+        .header h1 span { color: #FF5A1F; }
+        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #FF5A1F; color: #FF5A1F; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
+        .back-btn:hover { background: #FF5A1F; color: #ffffff; }
 
-        /* Category tabs */
         .category-section { margin-bottom: 32px; }
-        .category-title { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 4px; padding: 12px 0 8px; border-bottom: 2px solid #0078ff; display: flex; align-items: center; gap: 8px; }
-        .category-subtitle { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 16px; }
+        .category-title { font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 4px; padding: 12px 0 8px; border-bottom: 2px solid #FF5A1F; display: flex; align-items: center; gap: 8px; }
+        .category-subtitle { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-bottom: 16px; }
 
-        /* Filter tabs */
         .filter-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; overflow-x: auto; padding-bottom: 4px; }
-        .filter-btn { padding: 8px 18px; border-radius: 25px; border: 1px solid rgba(0,120,255,0.2); background: transparent; color: rgba(255,255,255,0.6); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif; }
-        .filter-btn:hover, .filter-btn.active { background: #0078ff; border-color: #0078ff; color: white; }
+        .filter-btn { padding: 8px 18px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.6); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+        .filter-btn:hover, .filter-btn.active { background: #FF5A1F; border-color: #FF5A1F; color: #ffffff; }
 
-        /* Search */
         .search-bar { margin-bottom: 20px; }
-        .search-input { width: 100%; padding: 12px 20px; background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.2); border-radius: 25px; color: white; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
-        .search-input:focus { border-color: #0078ff; }
-        .search-input::placeholder { color: rgba(255,255,255,0.3); }
+        .search-input { width: 100%; padding: 12px 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 25px; color: #ffffff; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
+        .search-input:focus { border-color: #FF5A1F; }
+        .search-input::placeholder { color: rgba(255,255,255,0.4); }
 
-        /* Exercise grid */
         .exercise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 
-        /* Exercise card */
         .exercise-card {
-            background: rgba(0,5,20,0.95);
-            border: 1px solid rgba(0,120,255,0.15);
+            background: #141414;
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 14px;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s;
         }
         .exercise-card:hover {
-            border-color: #0078ff;
+            border-color: #FF5A1F;
             transform: translateY(-3px);
-            box-shadow: 0 6px 24px rgba(0,120,255,0.2);
+            box-shadow: 0 6px 24px rgba(255,90,31,0.2);
         }
 
         .anim-box {
             height: 140px;
-            background: rgba(0,120,255,0.04);
+            background: rgba(255,255,255,0.03);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            border-bottom: 1px solid rgba(0,120,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            overflow: hidden;
         }
+
+        /* Real photo crossfade — two stacked images, top one pulses opacity to simulate motion */
+        .photo-crossfade { position: relative; width: 100%; height: 100%; }
+        .photo-crossfade img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .photo-crossfade img.frame-b { animation: crossfade 1.8s ease-in-out infinite alternate; }
+        @keyframes crossfade { from { opacity: 0; } to { opacity: 1; } }
+        .svg-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }
 
         .tag-diff {
             position: absolute;
@@ -85,18 +84,20 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            z-index: 2;
         }
         .tag-muscle {
             position: absolute;
             top: 8px;
             right: 8px;
             padding: 3px 8px;
-            background: rgba(0,120,255,0.15);
-            border: 1px solid rgba(0,120,255,0.3);
+            background: rgba(255,90,31,0.15);
+            border: 1px solid rgba(255,90,31,0.3);
             border-radius: 20px;
             font-size: 0.65rem;
-            color: #0078ff;
+            color: #FF5A1F;
             text-transform: uppercase;
+            z-index: 2;
         }
         .diff-beginner { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
         .diff-intermediate { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
@@ -104,46 +105,46 @@
 
         .card-info { padding: 14px; }
         .card-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
-        .card-desc { font-size: 0.78rem; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 10px; }
+        .card-desc { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 10px; }
         .card-stats { display: flex; gap: 12px; margin-bottom: 10px; }
-        .card-stat { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
-        .card-stat span { color: #0078ff; font-weight: 600; }
-        .view-btn { width: 100%; padding: 8px; background: rgba(0,120,255,0.08); border: 1px solid rgba(0,120,255,0.25); color: #0078ff; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .view-btn:hover { background: #0078ff; color: white; }
+        .card-stat { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+        .card-stat span { color: #FF5A1F; font-weight: 600; }
+        .view-btn { width: 100%; padding: 8px; background: rgba(255,90,31,0.08); border: 1px solid rgba(255,90,31,0.25); color: #FF5A1F; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .view-btn:hover { background: #FF5A1F; color: #ffffff; }
 
-        /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,20,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.open { display: flex; }
-        .modal { background: rgba(0,5,20,0.99); border: 1px solid rgba(0,120,255,0.3); border-radius: 20px; padding: 28px; max-width: 560px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
-        .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 1.4rem; cursor: pointer; }
-        .modal-close:hover { color: white; }
-        .modal-anim { height: 160px; background: rgba(0,120,255,0.04); border-radius: 12px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,120,255,0.1); }
+        .modal { background: #141414; border: 1px solid rgba(255,90,31,0.3); border-radius: 20px; padding: 28px; max-width: 560px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 1.4rem; cursor: pointer; }
+        .modal-close:hover { color: #ffffff; }
+        .modal-anim { height: 220px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; position: relative; }
         .modal-name { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
         .modal-tags { display: flex; gap: 8px; margin-bottom: 14px; }
-        .modal-desc { color: rgba(255,255,255,0.5); font-size: 0.85rem; line-height: 1.6; margin-bottom: 18px; }
-        .steps-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0078ff; margin-bottom: 12px; }
+        .modal-desc { color: rgba(255,255,255,0.6); font-size: 0.85rem; line-height: 1.6; margin-bottom: 18px; }
+        .steps-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #FF5A1F; margin-bottom: 12px; }
         .step-item { display: flex; gap: 12px; margin-bottom: 10px; }
-        .step-num { width: 22px; height: 22px; min-width: 22px; background: #0078ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .step-num { width: 22px; height: 22px; min-width: 22px; background: #FF5A1F; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
         .step-text { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
-        .modal-ask-btn { width: 100%; padding: 12px; background: #0078ff; color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 18px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .modal-ask-btn:hover { background: #0060cc; }
+        .modal-ask-btn { width: 100%; padding: 12px; background: #FF5A1F; color: #ffffff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 18px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-ask-btn:hover { background: #E64A0F; }
 
-        /* No results */
-        .no-results { text-align: center; padding: 40px; color: rgba(255,255,255,0.3); }
+        .no-results { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); }
 
-        @media (max-width: 600px) {
-            .exercise-grid { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 400px) {
-            .exercise-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 600px) { .exercise-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 400px) { .exercise-grid { grid-template-columns: 1fr; } }
+    
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 860px; background: #141414; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 24px rgba(0,0,0,0.35); border-radius: 24px 24px 0 0; z-index: 500; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: rgba(255,255,255,0.38); font-size: 0.62rem; font-weight: 600; text-decoration: none; }
+        .nav-item.active { color: #FF5A1F; }
+        .nav-icon { font-size: 1.05rem; }
+        body { padding-bottom: 90px; }
     </style>
 </head>
 <body>
 <div class="wrapper">
 
     <div class="header">
-        <h1>🏋️ Fit<span>Bot</span> Exercise Library</h1>
+        <h1>🏋️ Mentro Exercise Library</h1>
         <a href="/" class="back-btn">← Back to Chat</a>
     </div>
 
@@ -172,7 +173,6 @@
 
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" id="modal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal()">✕</button>
@@ -182,13 +182,57 @@
         <div class="modal-desc" id="modal-desc"></div>
         <div class="steps-title">How to do it</div>
         <div id="modal-steps"></div>
-        <button class="modal-ask-btn" id="modal-ask-btn">💬 Ask FitBot to build a plan with this exercise</button>
+        <button class="modal-ask-btn" id="modal-ask-btn">💬 Ask Mentro to build a plan with this exercise</button>
     </div>
 </div>
 
 <script>
+// Real exercise photos — matched from the free-exercise-db public domain dataset.
+// Two frames per exercise crossfade to suggest motion. Exercises not in here
+// fall back to the SVG stick-figure animation automatically.
+const EXERCISE_IMAGES = {
+    1: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plyo_Push-up/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plyo_Push-up/1.jpg"],
+    2: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bench_Press/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bench_Press/1.jpg"],
+    3: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Smith_Machine_Overhead_Shoulder_Press/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Smith_Machine_Overhead_Shoulder_Press/1.jpg"],
+    4: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Flyes/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Flyes/1.jpg"],
+    5: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/1.jpg"],
+    6: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dip_Machine/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dip_Machine/1.jpg"],
+    7: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/1.jpg"],
+    8: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Push-Up/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Push-Up/1.jpg"],
+    9: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Scapular_Pull-Up/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Scapular_Pull-Up/1.jpg"],
+    10: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/1.jpg"],
+    11: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bicep_Curl/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bicep_Curl/1.jpg"],
+    12: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternate_Hammer_Curl/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternate_Hammer_Curl/1.jpg"],
+    13: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/1.jpg"],
+    14: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One_Arm_Lat_Pulldown/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One_Arm_Lat_Pulldown/1.jpg"],
+    15: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Cable_Row/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Cable_Row/1.jpg"],
+    16: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Box_Squat/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Box_Squat/1.jpg"],
+    17: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Car_Deadlift/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Car_Deadlift/1.jpg"],
+    18: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lunge_Sprint/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lunge_Sprint/1.jpg"],
+    19: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"],
+    20: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/1.jpg"],
+    21: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/1.jpg"],
+    22: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/1.jpg"],
+    23: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arnold_Dumbbell_Press/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arnold_Dumbbell_Press/1.jpg"],
+    24: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Cable_Row/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Cable_Row/1.jpg"],
+    25: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dip_Machine/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dip_Machine/1.jpg"],
+    26: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/1.jpg"],
+    27: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/1.jpg"],
+    28: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Step-up_with_Knee_Raise/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Step-up_with_Knee_Raise/1.jpg"],
+    29: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/1.jpg"],
+    30: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Good_Morning/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Good_Morning/1.jpg"],
+    32: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Two-Arm_Kettlebell_Row/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Two-Arm_Kettlebell_Row/1.jpg"],
+    33: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Renegade_Row/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Renegade_Row/1.jpg"],
+    34: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Thruster/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Thruster/1.jpg"],
+    35: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/1.jpg"],
+    36: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Crunch/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Crunch/1.jpg"],
+    37: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/1.jpg"],
+    38: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/1.jpg"],
+    39: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Jumping/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Jumping/1.jpg"],
+    40: ["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/0.jpg", "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/1.jpg"],
+};
+
 const EXERCISES = [
-    // ========== PUSH WORKOUT ==========
     { id:1, name:"Push Up", group:"push", muscle:"chest", difficulty:"beginner", sets:"3-4", reps:"10-15", emoji:"💪",
       desc:"Classic upper body push exercise targeting chest, shoulders and triceps.",
       steps:["Start in a high plank with hands shoulder-width apart","Lower your chest toward the floor keeping body straight","Push back up by fully extending your arms","Keep your core tight and don't let hips sag","Breathe in going down, breathe out going up"] },
@@ -213,8 +257,6 @@ const EXERCISES = [
     { id:8, name:"Incline Push Up", group:"push", muscle:"chest", difficulty:"beginner", sets:"3", reps:"12-15", emoji:"💪",
       desc:"Easier push up variation targeting upper chest.",
       steps:["Place hands on elevated surface like bench","Keep body in a straight line","Lower chest toward the surface","Push back up explosively","Great for beginners building chest strength"] },
-
-    // ========== PULL WORKOUT ==========
     { id:9, name:"Pull Up", group:"pull", muscle:"back", difficulty:"intermediate", sets:"3-4", reps:"6-10", emoji:"🏋️",
       desc:"Best bodyweight exercise for back and biceps.",
       steps:["Hang from bar with hands slightly wider than shoulders","Pull chest toward the bar squeezing your back","Drive elbows down and back as you pull","Pause when chin is above the bar","Lower yourself slowly with full control"] },
@@ -236,8 +278,6 @@ const EXERCISES = [
     { id:15, name:"Cable Row", group:"pull", muscle:"back", difficulty:"beginner", sets:"3-4", reps:"12", emoji:"🏋️",
       desc:"Seated cable row for mid-back thickness.",
       steps:["Sit at cable row machine with slight knee bend","Grab handle with both hands","Pull handle to lower chest","Squeeze shoulder blades together at end","Extend arms slowly back to start"] },
-
-    // ========== LEGS WORKOUT ==========
     { id:16, name:"Squat", group:"legs", muscle:"legs", difficulty:"beginner", sets:"4", reps:"12-15", emoji:"🦵",
       desc:"King of leg exercises. Works entire lower body.",
       steps:["Stand feet shoulder-width apart toes slightly out","Push hips back and bend knees simultaneously","Lower until thighs are parallel to floor","Keep chest up and knees over toes","Drive through heels to stand back up"] },
@@ -259,8 +299,6 @@ const EXERCISES = [
     { id:22, name:"Glute Bridge", group:"legs", muscle:"legs", difficulty:"beginner", sets:"3", reps:"15-20", emoji:"🦵",
       desc:"Hip extension exercise targeting glutes.",
       steps:["Lie on back knees bent feet flat on floor","Place feet hip-width apart close to hips","Drive hips up squeezing glutes hard","Body should form straight line from knees to shoulders","Hold at top then lower with control"] },
-
-    // ========== UPPER BODY ==========
     { id:23, name:"Arnold Press", group:"upper", muscle:"shoulders", difficulty:"intermediate", sets:"3", reps:"10-12", emoji:"💪",
       desc:"Full shoulder exercise hitting all three deltoid heads.",
       steps:["Start with dumbbells at shoulder height palms facing you","Rotate palms outward as you press up","Fully extend arms overhead at top","Reverse the rotation as you lower","Start with lighter weight to learn movement"] },
@@ -273,8 +311,6 @@ const EXERCISES = [
     { id:26, name:"Cable Crossover", group:"upper", muscle:"chest", difficulty:"intermediate", sets:"3", reps:"12-15", emoji:"🏋️",
       desc:"Cable fly movement for chest peak and definition.",
       steps:["Set cables at shoulder height on both sides","Stand in middle holding both handles","Step forward with one foot for stability","Bring handles together in front of chest","Return slowly fighting the resistance"] },
-
-    // ========== LOWER BODY ==========
     { id:27, name:"Hip Thrust", group:"lower", muscle:"legs", difficulty:"beginner", sets:"4", reps:"15", emoji:"🦵",
       desc:"Best exercise for glute activation and strength.",
       steps:["Sit with upper back against bench knees bent","Place barbell across hips and hold in place","Drive hips up until body is parallel to floor","Squeeze glutes hard at the top","Lower hips back toward floor with control"] },
@@ -287,8 +323,6 @@ const EXERCISES = [
     { id:30, name:"Good Morning", group:"lower", muscle:"legs", difficulty:"intermediate", sets:"3", reps:"12", emoji:"🦵",
       desc:"Hip hinge for hamstrings and lower back strength.",
       steps:["Place barbell on upper back like a squat","Keep slight bend in knees throughout","Hinge forward at hips keeping back flat","Lower torso until parallel to floor","Drive hips forward to return upright"] },
-
-    // ========== FULL BODY ==========
     { id:31, name:"Burpee", group:"full", muscle:"cardio", difficulty:"intermediate", sets:"3-4", reps:"10-12", emoji:"🔥",
       desc:"Full body explosive exercise combining strength and cardio.",
       steps:["Stand with feet shoulder-width apart","Drop into squat placing hands on floor","Jump feet back into plank position","Perform a push up (optional)","Jump feet forward then explode up with arms overhead"] },
@@ -301,8 +335,6 @@ const EXERCISES = [
     { id:34, name:"Thruster", group:"full", muscle:"shoulders", difficulty:"advanced", sets:"4", reps:"10", emoji:"🔥",
       desc:"Front squat into overhead press combo for full body power.",
       steps:["Hold barbell at shoulder height in front rack","Perform a full depth front squat","As you stand use momentum to press bar overhead","Fully extend arms at the top","Lower bar back to shoulders as you descend"] },
-
-    // ========== CORE ==========
     { id:35, name:"Plank", group:"full", muscle:"core", difficulty:"beginner", sets:"3", reps:"30-60s", emoji:"🏋️",
       desc:"Fundamental core stability exercise.",
       steps:["Start on forearms and toes","Keep body in straight line from head to heels","Engage core by pulling belly button to spine","Keep hips level don't let them sag","Hold the position breathing steadily"] },
@@ -315,8 +347,6 @@ const EXERCISES = [
     { id:38, name:"Mountain Climber", group:"full", muscle:"core", difficulty:"intermediate", sets:"3", reps:"20 each", emoji:"🏃",
       desc:"Dynamic core exercise that also raises heart rate.",
       steps:["Start in a high plank position","Drive one knee toward your chest","Quickly switch legs in a running motion","Keep your hips level throughout","Maintain steady breathing rhythm"] },
-
-    // ========== CARDIO ==========
     { id:39, name:"Jumping Jack", group:"full", muscle:"cardio", difficulty:"beginner", sets:"3", reps:"30", emoji:"⚡",
       desc:"Classic full body warm up and cardio exercise.",
       steps:["Stand with feet together arms at sides","Jump and spread feet wider than shoulder-width","Raise arms above head at the same time","Jump back to starting position","Repeat at steady pace"] },
@@ -345,19 +375,54 @@ function setFilter(filter, btn) {
 
 function getAnimation(ex) {
     const anims = {
-        push: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pu 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="18" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="26" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="38" x2="28" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="38" x2="72" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="85" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="85" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}</style></svg>`,
-        pull: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#0078ff" stroke-width="3" opacity=".5"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="28" r="8" fill="#0078ff" opacity=".8"/><line x1="45" y1="8" x2="35" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="55" y1="8" x2="65" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="50" y2="70" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="48" x2="30" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="48" x2="70" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="70" x2="38" y2="98" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="70" x2="62" y2="98" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-18px)}100%{transform:translateY(0)}}</style></svg>`,
-        legs: `<svg width="100" height="110" viewBox="0 0 100 110"><g style="animation:sq 1.5s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="55" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="35" x2="28" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="35" x2="72" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="55" x2="35" y2="82" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="55" x2="65" y2="82" stroke="#0078ff" stroke-width="2.5"/><line x1="35" y1="82" x2="30" y2="100" stroke="#0078ff" stroke-width="2.5"/><line x1="65" y1="82" x2="70" y2="100" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes sq{0%{transform:scaleY(1)}50%{transform:scaleY(.72) translateY(12px)}100%{transform:scaleY(1)}}</style></svg>`,
-        cardio: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:rn .8s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="24" y2="26" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="72" y2="48" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="28" y2="88" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="68" y2="84" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes rn{0%{transform:translateX(-6px) rotate(-4deg)}50%{transform:translateX(6px) rotate(4deg)}100%{transform:translateX(-6px) rotate(-4deg)}}</style></svg>`,
-        core: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pl 2s ease-in-out infinite"><circle cx="80" cy="22" r="8" fill="#0078ff" opacity=".8"/><line x1="72" y1="28" x2="20" y2="42" stroke="#0078ff" stroke-width="2.5"/><line x1="60" y1="32" x2="55" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="60" y1="32" x2="68" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="20" y1="42" x2="12" y2="62" stroke="#0078ff" stroke-width="2.5"/><line x1="20" y1="42" x2="25" y2="62" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pl{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}</style></svg>`,
-        shoulders: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:op 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="16" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="24" x2="50" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="18" y2="28" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="82" y2="28" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="60" x2="38" y2="88" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="60" x2="62" y2="88" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes op{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}</style></svg>`,
-        biceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><g style="animation:cl 1.5s ease-in-out infinite;transform-origin:28px 46px"><line x1="50" y1="36" x2="28" y2="46" stroke="#0078ff" stroke-width="2.5"/><line x1="28" y1="46" x2="18" y2="28" stroke="#0078ff" stroke-width="2.5"/></g><line x1="50" y1="36" x2="72" y2="50" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="86" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#0078ff" stroke-width="2.5"/><style>@keyframes cl{0%{transform:rotate(0deg)}50%{transform:rotate(-48deg)}100%{transform:rotate(0deg)}}</style></svg>`,
-        triceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#0078ff" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="36" x2="28" y2="50" stroke="#0078ff" stroke-width="2.5"/><g style="animation:tr 1.5s ease-in-out infinite;transform-origin:72px 36px"><line x1="50" y1="36" x2="72" y2="36" stroke="#0078ff" stroke-width="2.5"/><line x1="72" y1="36" x2="72" y2="62" stroke="#0078ff" stroke-width="2.5"/></g><line x1="50" y1="58" x2="38" y2="86" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#0078ff" stroke-width="2.5"/><style>@keyframes tr{0%{transform:rotate(0deg)}50%{transform:rotate(35deg)}100%{transform:rotate(0deg)}}</style></svg>`,
-        back: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#0078ff" stroke-width="3" opacity=".4"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="26" r="8" fill="#0078ff" opacity=".8"/><line x1="44" y1="8" x2="34" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="56" y1="8" x2="66" y2="14" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="34" x2="50" y2="68" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="46" x2="28" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="46" x2="72" y2="60" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="68" x2="38" y2="96" stroke="#0078ff" stroke-width="2.5"/><line x1="50" y1="68" x2="62" y2="96" stroke="#0078ff" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-16px)}100%{transform:translateY(0)}}</style></svg>`,
+        push: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pu 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="18" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="26" x2="50" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="38" x2="28" y2="55" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="38" x2="72" y2="55" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="85" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="85" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}</style></svg>`,
+        pull: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#FF5A1F" stroke-width="3" opacity=".5"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="28" r="8" fill="#FF5A1F" opacity=".8"/><line x1="45" y1="8" x2="35" y2="14" stroke="#FF5A1F" stroke-width="2.5"/><line x1="55" y1="8" x2="65" y2="14" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="50" y2="70" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="48" x2="30" y2="62" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="48" x2="70" y2="62" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="70" x2="38" y2="98" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="70" x2="62" y2="98" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-18px)}100%{transform:translateY(0)}}</style></svg>`,
+        legs: `<svg width="100" height="110" viewBox="0 0 100 110"><g style="animation:sq 1.5s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="14" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="22" x2="50" y2="55" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="35" x2="28" y2="48" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="35" x2="72" y2="48" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="55" x2="35" y2="82" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="55" x2="65" y2="82" stroke="#FF5A1F" stroke-width="2.5"/><line x1="35" y1="82" x2="30" y2="100" stroke="#FF5A1F" stroke-width="2.5"/><line x1="65" y1="82" x2="70" y2="100" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes sq{0%{transform:scaleY(1)}50%{transform:scaleY(.72) translateY(12px)}100%{transform:scaleY(1)}}</style></svg>`,
+        cardio: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:rn .8s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="14" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="24" y2="26" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="72" y2="48" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="28" y2="88" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="68" y2="84" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes rn{0%{transform:translateX(-6px) rotate(-4deg)}50%{transform:translateX(6px) rotate(4deg)}100%{transform:translateX(-6px) rotate(-4deg)}}</style></svg>`,
+        core: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:pl 2s ease-in-out infinite"><circle cx="80" cy="22" r="8" fill="#FF5A1F" opacity=".8"/><line x1="72" y1="28" x2="20" y2="42" stroke="#FF5A1F" stroke-width="2.5"/><line x1="60" y1="32" x2="55" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><line x1="60" y1="32" x2="68" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><line x1="20" y1="42" x2="12" y2="62" stroke="#FF5A1F" stroke-width="2.5"/><line x1="20" y1="42" x2="25" y2="62" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes pl{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}</style></svg>`,
+        shoulders: `<svg width="100" height="100" viewBox="0 0 100 100"><g style="animation:op 1.5s ease-in-out infinite;transform-origin:50px 50px"><circle cx="50" cy="16" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="24" x2="50" y2="60" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="18" y2="28" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="82" y2="28" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="60" x2="38" y2="88" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="60" x2="62" y2="88" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes op{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}</style></svg>`,
+        biceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><g style="animation:cl 1.5s ease-in-out infinite;transform-origin:28px 46px"><line x1="50" y1="36" x2="28" y2="46" stroke="#FF5A1F" stroke-width="2.5"/><line x1="28" y1="46" x2="18" y2="28" stroke="#FF5A1F" stroke-width="2.5"/></g><line x1="50" y1="36" x2="72" y2="50" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="38" y2="86" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#FF5A1F" stroke-width="2.5"/><style>@keyframes cl{0%{transform:rotate(0deg)}50%{transform:rotate(-48deg)}100%{transform:rotate(0deg)}}</style></svg>`,
+        triceps: `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="14" r="8" fill="#FF5A1F" opacity=".8"/><line x1="50" y1="22" x2="50" y2="58" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="36" x2="28" y2="50" stroke="#FF5A1F" stroke-width="2.5"/><g style="animation:tr 1.5s ease-in-out infinite;transform-origin:72px 36px"><line x1="50" y1="36" x2="72" y2="36" stroke="#FF5A1F" stroke-width="2.5"/><line x1="72" y1="36" x2="72" y2="62" stroke="#FF5A1F" stroke-width="2.5"/></g><line x1="50" y1="58" x2="38" y2="86" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="58" x2="62" y2="86" stroke="#FF5A1F" stroke-width="2.5"/><style>@keyframes tr{0%{transform:rotate(0deg)}50%{transform:rotate(35deg)}100%{transform:rotate(0deg)}}</style></svg>`,
+        back: `<svg width="100" height="110" viewBox="0 0 100 110"><line x1="10" y1="8" x2="90" y2="8" stroke="#FF5A1F" stroke-width="3" opacity=".4"/><g style="animation:pu 1.8s ease-in-out infinite;transform-origin:50px 55px"><circle cx="50" cy="26" r="8" fill="#FF5A1F" opacity=".8"/><line x1="44" y1="8" x2="34" y2="14" stroke="#FF5A1F" stroke-width="2.5"/><line x1="56" y1="8" x2="66" y2="14" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="34" x2="50" y2="68" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="46" x2="28" y2="60" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="46" x2="72" y2="60" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="68" x2="38" y2="96" stroke="#FF5A1F" stroke-width="2.5"/><line x1="50" y1="68" x2="62" y2="96" stroke="#FF5A1F" stroke-width="2.5"/></g><style>@keyframes pu{0%{transform:translateY(0)}50%{transform:translateY(-16px)}100%{transform:translateY(0)}}</style></svg>`,
     };
     const map = {chest:'push',back:'back',shoulders:'shoulders',biceps:'biceps',triceps:'triceps',legs:'legs',core:'core',cardio:'cardio'};
     const key = map[ex.muscle] || 'push';
     return anims[key] || `<div style="font-size:3rem;">${ex.emoji}</div>`;
+}
+
+// Returns real crossfading photos if we have them for this exercise, otherwise the SVG fallback.
+// Both are pre-rendered together; onImgError just toggles visibility (no string injection = no quote bugs)
+function getVisual(ex) {
+    const images = EXERCISE_IMAGES[ex.id];
+    if (images && images.length > 0) {
+        const frameB = images.length > 1
+            ? `<img class="frame-b" src="${images[1]}" alt="${ex.name}" onerror="onImgError(this)"/>`
+            : '';
+        return `<div class="visual-wrap" style="width:100%;height:100%;position:relative;">
+            <div class="photo-crossfade">
+                <img class="frame-a" src="${images[0]}" alt="${ex.name}" onerror="onImgError(this)"/>
+                ${frameB}
+            </div>
+            <div class="svg-fallback">${getAnimation(ex)}</div>
+        </div>`;
+    }
+    return getAnimation(ex);
+}
+
+function onImgError(imgEl) {
+    // If only the second (crossfade) frame fails, just hide it and keep
+    // showing the first frame as a static image — no need to give up entirely
+    if (imgEl.classList.contains('frame-b')) {
+        imgEl.style.display = 'none';
+        return;
+    }
+    // If the FIRST frame fails, there's nothing to show — fall back to SVG
+    const wrap = imgEl.closest('.visual-wrap');
+    if (!wrap) { imgEl.style.display = 'none'; return; }
+    const photo = wrap.querySelector('.photo-crossfade');
+    const fallback = wrap.querySelector('.svg-fallback');
+    if (photo) photo.style.display = 'none';
+    if (fallback) fallback.style.display = 'flex';
 }
 
 function renderAll() {
@@ -400,7 +465,7 @@ function renderCard(ex) {
     return `
         <div class="exercise-card" onclick="openModal(${ex.id})">
             <div class="anim-box">
-                ${getAnimation(ex)}
+                ${getVisual(ex)}
                 <span class="tag-diff diff-${ex.difficulty}">${ex.difficulty}</span>
                 <span class="tag-muscle">${ex.muscle}</span>
             </div>
@@ -419,7 +484,7 @@ function renderCard(ex) {
 function openModal(id) {
     const ex = EXERCISES.find(e => e.id === id);
     if (!ex) return;
-    document.getElementById('modal-anim').innerHTML = getAnimation(ex);
+    document.getElementById('modal-anim').innerHTML = getVisual(ex);
     document.getElementById('modal-name').textContent = `${ex.emoji} ${ex.name}`;
     document.getElementById('modal-tags').innerHTML = `
         <span class="tag-diff diff-${ex.difficulty}" style="position:static;">${ex.difficulty}</span>
@@ -448,6 +513,12 @@ document.getElementById('modal').addEventListener('click', function(e) {
 });
 
 renderAll();
-</script>
+</script>    <div class="bottom-nav">
+        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+        <a href="/exercises" class="nav-item active"><span class="nav-icon">🏋️</span>Workout</a>
+        <a href="/diet" class="nav-item"><span class="nav-icon">🥗</span>Diet</a>
+        <a href="/progress" class="nav-item"><span class="nav-icon">📊</span>Progress</a>
+        <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
+    </div>
 </body>
 </html>

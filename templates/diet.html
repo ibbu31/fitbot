@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentro - Diet Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-page: #0a0a0a;
+        --bg-card: #141414;
+        --bg-card-2: #1c1c1c;
+        --accent: #FF5A1F;
+        --accent-2: #FF7A47;
+        --accent-gradient: linear-gradient(135deg, #FF5A1F 0%, #FF7A47 100%);
+        --text-hi: #ffffff;
+        --text-mid: rgba(255, 255, 255, 0.6);
+        --text-low: rgba(255, 255, 255, 0.38);
+        --border: rgba(255, 255, 255, 0.08);
+        --green: #2ecc71;
+        --blue: #3b82f6;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background: var(--bg-page); color: var(--text-hi); min-height: 100vh; padding-bottom: 90px; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 20px 18px; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; }
+    .back-link { color: var(--text-mid); text-decoration: none; font-size: 0.85rem; }
+
+    .generate-card {
+        background: var(--accent-gradient);
+        border-radius: 20px;
+        padding: 22px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(255, 90, 31, 0.25);
+    }
+    .generate-card p { color: rgba(255,255,255,0.9); font-size: 0.85rem; margin-bottom: 14px; }
+    .generate-btn {
+        background: var(--bg-card); color: var(--accent); border: none;
+        padding: 12px 28px; border-radius: 14px; font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s;
+    }
+    .generate-btn:hover { transform: scale(1.03); }
+    .generate-btn:disabled { opacity: 0.7; cursor: default; }
+
+    .diet-card { background: var(--bg-card); border-radius: 18px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: none; }
+    .diet-card.visible { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .diet-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .diet-card-top h3 { font-size: 0.95rem; font-weight: 700; }
+    .diet-card-top .kcal { font-size: 0.8rem; color: var(--text-mid); font-weight: 600; }
+
+    .macro-row { display: flex; gap: 10px; }
+    .macro-pill { flex: 1; background: var(--bg-card-2); border-radius: 12px; padding: 12px 8px; text-align: center; }
+    .macro-pill .num { font-weight: 800; font-size: 1.05rem; }
+    .macro-pill .lbl { font-size: 0.64rem; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+    .macro-pill.protein .num { color: var(--blue); }
+    .macro-pill.carbs .num { color: var(--green); }
+    .macro-pill.fats .num { color: var(--accent); }
+
+    .meal-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 0; border-top: 1px solid var(--border); }
+    .meal-row:first-of-type { border-top: none; }
+    .meal-name { font-size: 0.86rem; font-weight: 600; }
+    .meal-cal { font-size: 0.76rem; color: var(--text-mid); white-space: nowrap; }
+
+    .empty-state { text-align: center; padding: 30px 20px; color: var(--text-mid); font-size: 0.85rem; }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--bg-card); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); border-radius: 24px 24px 0 0; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-low); font-size: 0.62rem; font-weight: 600; text-decoration: none; }
+    .nav-item.active { color: var(--accent); }
+    .nav-icon { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <h1>Diet Plan</h1>
+        <a href="/" class="back-link">← Chat</a>
+    </div>
+
+    <div class="generate-card">
+        <p>Get a personalized one-day meal plan based on your goal</p>
+        <button class="generate-btn" id="generate-btn" onclick="generateDiet()">Generate My Plan</button>
+    </div>
+
+    <div class="diet-card" id="macro-card">
+        <div class="diet-card-top">
+            <h3>Nutrition Summary</h3>
+            <span class="kcal" id="total-kcal">-- kcal</span>
+        </div>
+        <div class="macro-row">
+            <div class="macro-pill protein"><div class="num" id="protein-val">--g</div><div class="lbl">Protein</div></div>
+            <div class="macro-pill carbs"><div class="num" id="carbs-val">--g</div><div class="lbl">Carbs</div></div>
+            <div class="macro-pill fats"><div class="num" id="fats-val">--g</div><div class="lbl">Fats</div></div>
+        </div>
+    </div>
+
+    <div class="diet-card" id="meals-card">
+        <div id="meals-list"></div>
+    </div>
+
+    <div class="empty-state" id="empty-state">No diet plan generated yet. Tap the button above to get started.</div>
+</div>
+
+<div class="bottom-nav">
+    <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+    <a href="/exercises" class="nav-item"><span class="nav-icon">🏋️</span>Workout</a>
+    <a href="/diet" class="nav-item active"><span class="nav-icon">🥗</span>Diet</a>
+    <a href="/progress" class="nav-item"><span class="nav-icon">📊</span>Progress</a>
+    <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
+</div>
+
+<script>
+async function generateDiet() {
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    try {
+        const response = await fetch('/api/generate-diet', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const result = await response.json();
+
+        if (result.success) {
+            const diet = result.diet;
+            document.getElementById('total-kcal').textContent = diet.calories + ' kcal';
+            document.getElementById('protein-val').textContent = diet.protein_g + 'g';
+            document.getElementById('carbs-val').textContent = diet.carbs_g + 'g';
+            document.getElementById('fats-val').textContent = diet.fats_g + 'g';
+
+            document.getElementById('meals-list').innerHTML = diet.meals.map(m => `
+                <div class="meal-row">
+                    <span class="meal-name">${m.name}</span>
+                    <span class="meal-cal">${m.calories} kcal</span>
+                </div>
+            `).join('');
+
+            document.getElementById('macro-card').classList.add('visible');
+            document.getElementById('meals-card').classList.add('visible');
+            document.getElementById('empty-state').style.display = 'none';
+        } else {
+            alert(result.error || 'Could not generate diet plan.');
+        }
+    } catch (e) {
+        alert('Something went wrong. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate My Plan';
+    }
+}
+</script>
+</body>
+</html>

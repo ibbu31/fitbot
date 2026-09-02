@@ -15,6 +15,9 @@ import bleach
 import os
 import time
 import secrets
+import requests
+import base64
+import uuid
 
 load_dotenv()
 
@@ -56,43 +59,43 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 
-SYSTEM_PROMPT = """You are FitBot, a professional gym trainer and nutritionist with 10 years of experience. You are smart, motivating, and highly knowledgeable.
+SYSTEM_PROMPT = """You are Mentro, an experienced personal trainer and nutritionist with 10 years of coaching experience. You are knowledgeable, direct, and genuinely invested in the user's results — like a real coach, not a cheerleader.
 
 PERSONALITY:
-- Speak like a friendly, energetic personal trainer
-- Use the user's name when possible
-- Be encouraging and positive
-- Give specific, actionable advice
+- Speak like a knowledgeable, no-nonsense coach who respects the user's intelligence
+- Use the user's name naturally, not in every message
+- Be encouraging through competence and clear guidance, not through excessive enthusiasm
+- Give specific, actionable, evidence-based advice
+- It's fine to be warm, but don't be performatively excited about everything
 
 RESPONSE FORMAT RULES (VERY IMPORTANT):
-- NEVER write long paragraphs
-- ALWAYS use bullet points and short lines
-- Use emojis to make it visual and fun
+- NEVER write long paragraphs — use bullet points and short lines
+- Use AT MOST one emoji per response, only when it genuinely adds clarity (e.g. marking a section) — never stack multiple emojis, never use them as decoration
 - Structure every response like this:
 
 For workout plans use this format:
-💪 **[Workout Name]**
+**[Workout Name]**
 - Exercise 1 — sets x reps (rest time)
 - Exercise 2 — sets x reps (rest time)
 
 For diet advice use this format:
-🥗 **[Meal Name]**
+**[Meal Name]**
 - Food item 1 — quantity
 - Food item 2 — quantity
 
 For general advice use this format:
-✅ **Key Point 1**
+**Key Point 1**
 Brief explanation in 1 line
 
 SMART BEHAVIOR:
 - Remember what the user told you earlier in the conversation
-- Personalize every response based on their goal and level
+- Personalize every response based on their goal, level, and history
 - If user mentions pain or injury, immediately suggest safer alternatives
-- Always ask follow-up questions to give better advice
-- Give specific numbers (sets, reps, calories, protein grams)
+- Ask sharp follow-up questions only when the answer genuinely changes your advice
+- Give specific numbers (sets, reps, calories, protein grams) — vague advice isn't useful
 
-ONBOARDING (first message only):
-Ask these 4 questions in a fun way:
+ONBOARDING (first message only, if profile isn't already known):
+Ask these 4 questions directly and efficiently:
 1. What is your fitness goal? (weight loss / muscle gain / endurance / general fitness)
 2. What is your level? (beginner / intermediate / advanced)
 3. What equipment do you have? (gym / home / no equipment)
@@ -117,7 +120,7 @@ def call_gemini(messages, system_prompt):
             if msg['role'] == 'user':
                 conversation += f"User: {msg['content']}\n"
             else:
-                conversation += f"FitBot: {msg['content']}\n"
+                conversation += f"Mentro: {msg['content']}\n"
         response = gemini_model.generate_content(conversation)
         return response.text
     except Exception as e:
@@ -128,7 +131,7 @@ def call_groq_with_retry(messages, system_prompt, retries=3):
     for attempt in range(retries):
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="openai/gpt-oss-120b",
                 messages=[{"role": "system", "content": system_prompt}, *messages],
                 max_tokens=1024
             )
@@ -142,13 +145,13 @@ def call_groq_with_retry(messages, system_prompt, retries=3):
                 gemini_reply = call_gemini(messages, system_prompt)
                 if gemini_reply:
                     return gemini_reply
-                return "⚠️ FitBot is very busy! Please wait 30 seconds and try again. 💪"
+                return "⚠️ Mentro is very busy! Please wait 30 seconds and try again. 💪"
             else:
                 gemini_reply = call_gemini(messages, system_prompt)
                 if gemini_reply:
                     return gemini_reply
                 return "⚠️ Something went wrong. Please try again! 💪"
-    return "⚠️ FitBot is very busy! Please try again in 1 minute. 💪"
+    return "⚠️ Mentro is very busy! Please try again in 1 minute. 💪"
 
 def login_required(f):
     from functools import wraps
@@ -162,7 +165,7 @@ def login_required(f):
 @app.after_request
 def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
@@ -173,9 +176,28 @@ def home():
     # Allow guest users — no login required
     username = session.get('username', None)
     is_guest = username is None
+    onboarded = True  # default for guests, so the quiz never shows to them
+    referral_code = ''
+
+    if not is_guest and 'user_id' in session:
+        try:
+            conn = get_db()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor.execute('SELECT onboarded, referral_code FROM users WHERE id = %s', (session['user_id'],))
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            onboarded = bool(row['onboarded']) if row else False
+            referral_code = row.get('referral_code') or '' if row else ''
+        except Exception as e:
+            print(f"Onboarded check error: {e}")
+            onboarded = True  # fail safe — don't block chat access if this check breaks
+
     return render_template("index.html",
         username=username or 'Guest',
-        is_guest=is_guest)
+        is_guest=is_guest,
+        onboarded=onboarded,
+        referral_code=referral_code)
 @app.route("/chat", methods=["POST"])
 @limiter.limit("20 per minute")
 def chat():
@@ -195,7 +217,61 @@ def chat():
     if not is_guest and 'user_id' in session:
         user_id = session['user_id']
         username = session.get('username', 'there')
-        system_with_language = SYSTEM_PROMPT + f"\n\nIMPORTANT: Reply in {language_instruction} only. Address the user as {username}."
+
+        # Pull saved onboarding profile so the AI already knows the user's
+        # goal/level/equipment/injuries instead of asking every time
+        profile_context = ""
+        try:
+            conn3 = get_db()
+            cursor3 = conn3.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor3.execute('SELECT fitness_goal, fitness_level, equipment, injuries FROM users WHERE id = %s', (user_id,))
+            profile = cursor3.fetchone()
+            cursor3.close()
+            conn3.close()
+            if profile and profile.get('fitness_goal'):
+                profile_context = (
+                    f"\n\nUSER'S SAVED PROFILE (already known — do not ask these again):\n"
+                    f"- Goal: {profile.get('fitness_goal', 'not set')}\n"
+                    f"- Level: {profile.get('fitness_level', 'not set')}\n"
+                    f"- Equipment: {profile.get('equipment', 'not set')}\n"
+                    f"- Injuries/pain areas: {profile.get('injuries', 'none')}\n"
+                )
+        except Exception as e:
+            print(f"Profile context error: {e}")
+
+        # Pull recent progress history so the AI can apply real progressive overload —
+        # referencing actual past performance instead of generic advice
+        progress_context = ""
+        try:
+            conn2 = get_db()
+            cursor2 = conn2.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor2.execute('''
+                SELECT workout_name, sets_completed, reps_completed, weight, notes, created_at
+                FROM progress
+                WHERE user_id = %s AND workout_completed = TRUE
+                ORDER BY created_at DESC
+                LIMIT 5
+            ''', (user_id,))
+            recent_logs = cursor2.fetchall()
+            cursor2.close()
+            conn2.close()
+
+            if recent_logs:
+                lines = []
+                for log in recent_logs:
+                    date_str = log['created_at'].strftime('%b %d') if log['created_at'] else 'recently'
+                    line = f"- {date_str}: {log['workout_name'] or 'workout'}, {log['sets_completed'] or '?'} sets x {log['reps_completed'] or '?'} reps"
+                    if log['weight']:
+                        line += f", {log['weight']}kg bodyweight logged"
+                    if log['notes']:
+                        line += f" (note: {log['notes']})"
+                    lines.append(line)
+                progress_context = "\n\nUSER'S RECENT LOGGED WORKOUTS (use this for progressive overload — if they crushed a workout, suggest pushing harder; if notes mention pain/difficulty, ease off):\n" + "\n".join(lines)
+        except Exception as e:
+            print(f"Progress context error: {e}")
+
+        system_with_language = SYSTEM_PROMPT + f"\n\nIMPORTANT: Reply in {language_instruction} only. Address the user as {username}." + profile_context + progress_context
+
 
         try:
             conn = get_db()
@@ -246,8 +322,8 @@ def add_progress():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO progress (user_id, weight, body_fat, workout_completed, workout_name, sets_completed, reps_completed, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO progress (user_id, weight, body_fat, workout_completed, workout_name, sets_completed, reps_completed, notes, photo_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             user_id,
             data.get('weight'),
@@ -256,7 +332,8 @@ def add_progress():
             data.get('workout_name', ''),
             data.get('sets_completed', 0),
             data.get('reps_completed', 0),
-            data.get('notes', '')
+            data.get('notes', ''),
+            data.get('photo_url')
         ))
         conn.commit()
         cursor.close()
@@ -330,12 +407,12 @@ def generate_pdf():
         story = []
 
         # Header
-        story.append(Paragraph("🏋️ FitBot — Your AI Fitness Coach", title_style))
+        story.append(Paragraph("🏋️ Mentro — Your AI Fitness Coach", title_style))
         story.append(Paragraph(f"Personal {plan_type} for {username}", subtitle_style))
         story.append(Spacer(1, 6*mm))
 
         # If we have parsed exercises — show them in table
-        if workout_plan and len(workout_plan) > 0 and workout_plan[0].get('name') != 'See your FitBot chat for full plan':
+        if workout_plan and len(workout_plan) > 0 and workout_plan[0].get('name') != 'See your Mentro chat for full plan':
             story.append(Paragraph(f"📋 {plan_type}", section_style))
 
             table_data = [['Exercise', 'Sets', 'Reps', 'Rest']]
@@ -407,7 +484,7 @@ def generate_pdf():
         footer_style = ParagraphStyle('Footer', fontSize=8,
             textColor=colors.HexColor('#999999'),
             fontName='Helvetica', alignment=TA_CENTER)
-        story.append(Paragraph("Generated by FitBot AI — Your Personal Fitness Coach", footer_style))
+        story.append(Paragraph("Generated by Mentro AI — Your Personal Fitness Coach", footer_style))
         story.append(Paragraph("Always consult a doctor before starting any fitness program.", footer_style))
 
         doc.build(story)
@@ -456,11 +533,11 @@ def forgot_password():
 
         reset_url = f"{request.host_url}reset-password/{token}"
         msg = Message(
-            subject="FitBot — Reset Your Password",
+            subject="Mentro — Reset Your Password",
             recipients=[email],
             html=f"""
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:white;padding:30px;border-radius:16px;">
-                <h1 style="color:#0078ff;text-align:center;">FitBot</h1>
+                <h1 style="color:#0078ff;text-align:center;">Mentro</h1>
                 <h2 style="text-align:center;">Reset Your Password</h2>
                 <p style="color:rgba(255,255,255,0.7);text-align:center;">Click the button below to reset your password. This link expires in 1 hour.</p>
                 <div style="text-align:center;margin:30px 0;">
@@ -572,6 +649,113 @@ def recovery_score():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/progress/upload-photo", methods=["POST"])
+@login_required
+def upload_progress_photo():
+    user_id = session['user_id']
+    data = request.json
+    photo_data = data.get('photo', '')
+    if not photo_data.startswith('data:image'):
+        return jsonify({'error': 'Invalid image'}), 400
+    try:
+        header, encoded = photo_data.split(',', 1)
+        ext = 'jpg' if 'jpeg' in header else 'png'
+        filename = f"{user_id}_{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join('static', 'progress_photos', filename)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'wb') as f:
+            f.write(base64.b64decode(encoded))
+        photo_url = f"/static/progress_photos/{filename}"
+        return jsonify({'success': True, 'photo_url': photo_url})
+    except Exception as e:
+        print(f"Photo upload error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/r/<code>")
+def referral_landing(code):
+    session['referred_by'] = code
+    return redirect(url_for('auth.register'))
+
+@app.route("/api/join-waitlist", methods=["POST"])
+@login_required
+def join_waitlist():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO premium_waitlist (user_id) VALUES (%s) ON CONFLICT DO NOTHING",
+            (session['user_id'],)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Waitlist error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/diet")
+@login_required
+def diet_page():
+    try:
+        return render_template("diet.html", username=session.get('username'))
+    except Exception as e:
+        print(f"Diet page error: {e}")
+        return f"<h1>Error loading diet plan: {str(e)}</h1>", 500
+
+@app.route("/api/generate-diet", methods=["POST"])
+@login_required
+def generate_diet():
+    user_id = session['user_id']
+    try:
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute('SELECT fitness_goal, fitness_level FROM users WHERE id = %s', (user_id,))
+        profile = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        goal = (profile.get('fitness_goal') if profile else None) or 'general fitness'
+        level = (profile.get('fitness_level') if profile else None) or 'beginner'
+
+        diet_prompt = f"""Generate a one-day Indian-friendly diet plan for someone whose fitness goal is {goal} and level is {level}.
+
+Respond with ONLY valid JSON, no other text, in exactly this format:
+{{
+  "calories": 1850,
+  "protein_g": 120,
+  "carbs_g": 220,
+  "fats_g": 65,
+  "meals": [
+    {{"name": "Breakfast: <specific meal>", "calories": 420}},
+    {{"name": "Lunch: <specific meal>", "calories": 560}},
+    {{"name": "Dinner: <specific meal>", "calories": 610}}
+  ]
+}}"""
+
+        try:
+            response = client.chat.completions.create(
+                model="openai/gpt-oss-120b",
+                messages=[{"role": "user", "content": diet_prompt}],
+                max_tokens=400
+            )
+            raw = response.choices[0].message.content
+        except Exception:
+            raw = call_gemini([{"role": "user", "content": diet_prompt}], "")
+
+        import json as jsonlib
+        import re as relib
+        json_match = relib.search(r'\{[\s\S]*\}', raw)
+        if json_match:
+            diet_data = jsonlib.loads(json_match.group())
+            return jsonify({'success': True, 'diet': diet_data})
+        else:
+            raise ValueError("Could not parse diet plan")
+
+    except Exception as e:
+        print(f"Diet generation error: {e}")
+        return jsonify({'error': 'Could not generate diet plan. Please try again.'}), 500
+
 @app.route("/generate-workout", methods=["POST"])
 @login_required
 def workout_api():
@@ -592,6 +776,35 @@ def workout_api():
         )
         return jsonify(result)
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api/onboarding", methods=["POST"])
+@login_required
+def save_onboarding():
+    user_id = session['user_id']
+    data = request.json
+    if not data:
+        return jsonify({'error': 'Invalid request'}), 400
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE users
+            SET onboarded = TRUE, fitness_goal = %s, fitness_level = %s, equipment = %s, injuries = %s
+            WHERE id = %s
+        ''', (
+            sanitize_input(data.get('goal', '')),
+            sanitize_input(data.get('level', '')),
+            sanitize_input(data.get('equipment', '')),
+            sanitize_input(data.get('injuries', '')),
+            user_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Onboarding save error: {e}")
         return jsonify({'error': str(e)}), 500
 
 # ==================
@@ -643,6 +856,14 @@ def user_stats():
         ''', (user_id,))
         total_workouts = cursor.fetchone()['total']
 
+        # Workouts completed in the last 7 days — for the weekly goal ring
+        cursor.execute('''
+            SELECT COUNT(*) as weekly FROM progress
+            WHERE user_id = %s AND workout_completed = TRUE
+            AND created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'
+        ''', (user_id,))
+        weekly_workouts = cursor.fetchone()['weekly']
+
         cursor.close()
         conn.close()
 
@@ -650,6 +871,8 @@ def user_stats():
             'streak': streak,
             'day_number': days_since_joined,
             'total_workouts': total_workouts,
+            'weekly_workouts': weekly_workouts,
+            'weekly_goal': 4,
             'username': session.get('username')
         })
     except Exception as e:
@@ -685,15 +908,19 @@ def send_reminders():
         cursor.close()
         conn.close()
 
+        print(f"DEBUG: Found {len(inactive_users)} inactive users")
+        for u in inactive_users:
+            print(f"DEBUG: Will email {u['username']} at {u['email']}")
+
         sent = 0
         for user in inactive_users:
             try:
                 msg = Message(
-                    subject="💪 Your FitBot workout is waiting!",
+                    subject="💪 Your Mentro workout is waiting!",
                     recipients=[user['email']],
                     html=f"""
                     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#000a1e;color:white;padding:30px;border-radius:16px;">
-                        <h1 style="color:#0078ff;text-align:center;">🏋️ FitBot</h1>
+                        <h1 style="color:#0078ff;text-align:center;">🏋️ Mentro</h1>
                         <h2 style="text-align:center;">Hey {user['username']}! Don't break your streak! 🔥</h2>
                         <p style="color:rgba(255,255,255,0.7);text-align:center;">You haven't logged your workout today. Your fitness journey is waiting!</p>
                         <div style="text-align:center;margin:30px 0;">

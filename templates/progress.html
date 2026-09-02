@@ -3,63 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitBot - Progress Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <title>Mentro - Progress Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-surface: #141414;
+            --bg-surface-2: #1c1c1c;
+            --accent-1: #FF5A1F;
+            --accent-2: #FF7A47;
+            --accent-gradient: linear-gradient(135deg, #FF5A1F 0%, #FF7A47 100%);
+            --amber: #ffb020;
+            --text-hi: #ffffff;
+            --text-mid: rgba(255, 255, 255, 0.6);
+            --text-low: rgba(255, 255, 255, 0.38);
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent-border-soft: rgba(255, 90, 31, 0.16);
+            --accent-border-strong: rgba(255, 90, 31, 0.4);
+        }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
         body {
-            background: #000a1e;
             min-height: 100vh;
-            color: white;
+            color: var(--text-hi);
             padding: 20px;
-            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 10, 30, 0.92);
-            z-index: 0;
+            background:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255, 90, 31, 0.08), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 100% 10%, rgba(255, 122, 71, 0.06), transparent 55%),
+                var(--bg-base);
         }
         .wrapper { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,120,255,0.2); }
-        .header h1 { font-size: 1.5rem; font-weight: 900; }
-        .header h1 span { color: #0078ff; }
-        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #0078ff; color: #0078ff; border-radius: 20px; text-decoration: none; font-size: 0.85rem; }
-        .card { background: rgba(0,5,20,0.95); border: 1px solid rgba(0,120,255,0.15); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
-        .card h2 { font-size: 1rem; color: rgba(255,255,255,0.7); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid var(--border-soft); }
+        .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; }
+        .header h1 span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .back-btn { padding: 8px 16px; background: transparent; border: 1px solid var(--accent-border-strong); color: var(--accent-1); border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
+        .back-btn:hover { background: var(--accent-gradient); border-color: transparent; color: white; }
+
+        .card {
+            background: rgba(19, 26, 43, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-soft);
+            border-radius: 20px;
+            padding: 26px;
+            margin-bottom: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .card h2 { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; color: var(--text-mid); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1.2px; }
+
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 16px; }
-        .form-group label { color: rgba(255,255,255,0.5); font-size: 0.75rem; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px 14px; background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.2); border-radius: 8px; color: white; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
-        .form-group input:focus, .form-group textarea:focus { border-color: #0078ff; }
+        .form-group label { color: var(--text-mid); font-size: 0.72rem; display: block; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .form-group .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+        .form-group .label-row label { margin-bottom: 0; }
+        .calc-link { background: none; border: none; color: var(--accent-1); font-size: 0.7rem; font-weight: 700; cursor: pointer; text-transform: none; letter-spacing: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        .calc-link:hover { text-decoration: underline; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 11px 14px;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            color: var(--text-hi);
+            font-size: 0.9rem;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.15); }
         .form-group textarea { resize: vertical; min-height: 80px; }
+
         .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: #0078ff; }
-        .checkbox-group label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
-        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .btn-primary { background: #0078ff; color: white; box-shadow: 0 0 20px rgba(0,120,255,0.3); }
-        .btn-primary:hover { background: #0060cc; }
-        .success { color: #22c55e; font-size: 0.85rem; margin-top: 10px; display: none; }
+        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-1); }
+        .checkbox-group label { color: var(--text-mid); font-size: 0.9rem; }
+
+        .btn { padding: 13px 26px; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); font-family: 'Space Grotesk', sans-serif; }
+        .btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 8px 24px rgba(255, 90, 31, 0.35); }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(255, 90, 31, 0.5); }
+        .success { color: #4ade80; font-size: 0.85rem; margin-top: 12px; display: none; }
+
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-box { background: rgba(0,120,255,0.05); border: 1px solid rgba(0,120,255,0.15); border-radius: 12px; padding: 16px; text-align: center; }
-        .stat-box .number { font-size: 1.8rem; font-weight: 900; color: #0078ff; }
-        .stat-box .label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .stat-box { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px; text-align: center; }
+        .stat-box .number { font-family: 'JetBrains Mono', monospace; font-size: 1.7rem; font-weight: 700; color: var(--accent-1); }
+        .stat-box .label { font-size: 0.7rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+        /* Progress photo upload */
+        .photo-upload-zone {
+            border: 2px dashed var(--border-soft);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        .photo-upload-zone:hover { border-color: var(--accent-1); background: rgba(255, 90, 31, 0.04); }
+        .photo-upload-zone.has-photo { padding: 0; border-style: solid; overflow: hidden; }
+        .photo-upload-zone img { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+        .photo-upload-hint { color: var(--text-low); font-size: 0.82rem; }
+        .photo-upload-icon { font-size: 1.8rem; margin-bottom: 8px; }
+
+        .photo-timeline { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 16px; }
+        .photo-timeline-item { border-radius: 10px; overflow: hidden; border: 1px solid var(--border-soft); position: relative; aspect-ratio: 3/4; }
+        .photo-timeline-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-timeline-date { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(11,15,26,0.85); color: var(--text-hi); font-size: 0.62rem; padding: 4px 6px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 12px; font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid rgba(0,120,255,0.15); }
-        td { padding: 12px; font-size: 0.85rem; border-bottom: 1px solid rgba(0,120,255,0.05); }
-        .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .badge-done { background: rgba(34,197,94,0.2); color: #22c55e; }
-        .badge-skip { background: rgba(255,100,100,0.2); color: #ff6464; }
+        th { text-align: left; padding: 10px 12px; font-size: 0.7rem; color: var(--text-low); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-soft); }
+        td { padding: 12px; font-size: 0.85rem; border-bottom: 1px solid var(--border-soft); color: var(--text-hi); }
+        .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+        .badge-done { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .badge-skip { background: rgba(255,100,100,0.15); color: #ff8080; }
+
+        /* Body fat calculator modal */
+        .bf-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 26, 0.8);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .bf-modal-overlay.open { display: flex; }
+        .bf-modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--accent-border-strong);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .bf-modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .bf-modal-top h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; }
+        .bf-modal-close { background: none; border: none; color: var(--text-low); font-size: 1.3rem; cursor: pointer; line-height: 1; }
+        .bf-modal-close:hover { color: white; }
+        .bf-modal-sub { color: var(--text-mid); font-size: 0.78rem; margin-bottom: 16px; line-height: 1.5; }
+
+        .bf-tabs { display: flex; gap: 6px; background: var(--bg-surface-2); border: 1px solid var(--border-soft); border-radius: 20px; padding: 4px; margin-bottom: 18px; }
+        .bf-tab { flex: 1; padding: 8px 10px; background: transparent; border: none; border-radius: 16px; color: var(--text-mid); font-size: 0.76rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .bf-tab.active { background: var(--accent-gradient); color: white; }
+
+        .bf-gender-row { display: flex; gap: 8px; margin-bottom: 14px; }
+        .bf-gender-btn { flex: 1; padding: 9px; background: var(--bg-surface-2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--text-mid); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .bf-gender-btn.active { border-color: var(--accent-1); color: var(--accent-1); background: rgba(255, 90, 31, 0.08); }
+
+        .bf-field { margin-bottom: 12px; }
+        .bf-field label { display: block; color: var(--text-mid); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; font-weight: 600; }
+        .bf-field input {
+            width: 100%; padding: 10px 13px;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            color: var(--text-hi);
+            font-size: 0.88rem;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .bf-field input:focus { border-color: var(--accent-1); }
+        .bf-hint { color: var(--text-low); font-size: 0.68rem; margin-top: 4px; }
+
+        .bf-calc-btn {
+            width: 100%; padding: 12px; margin-top: 6px;
+            background: var(--accent-gradient); color: white; border: none;
+            border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif; transition: transform 0.2s;
+        }
+        .bf-calc-btn:hover { transform: scale(1.02); }
+
+        .bf-result {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--accent-border-soft);
+            border-radius: 12px;
+            text-align: center;
+        }
+        .bf-result.visible { display: block; }
+        .bf-result .bf-num { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--accent-1); }
+        .bf-result .bf-label { font-size: 0.7rem; color: var(--text-low); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .bf-use-btn {
+            width: 100%; padding: 10px; margin-top: 12px;
+            background: transparent; border: 1px solid var(--accent-border-strong); color: var(--accent-1);
+            border-radius: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .bf-use-btn:hover { background: var(--accent-gradient); border-color: transparent; color: white; }
+        .bf-disclaimer { color: var(--text-low); font-size: 0.66rem; margin-top: 12px; line-height: 1.5; text-align: center; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 860px; background: var(--bg-surface); border-top: 1px solid var(--border-soft); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 24px rgba(0,0,0,0.35); border-radius: 24px 24px 0 0; z-index: 500; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-low); font-size: 0.62rem; font-weight: 600; text-decoration: none; }
+        .nav-item.active { color: var(--accent-1); }
+        .nav-icon { font-size: 1.05rem; }
+        body { padding-bottom: 90px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="header">
-            <h1>🏋️ Fit<span>Bot</span> Progress</h1>
+            <h1>Mentro Progress</h1>
             <a href="/" class="back-btn">← Back to Chat</a>
         </div>
 
@@ -75,7 +220,7 @@
             </div>
             <div class="stat-box">
                 <div class="number" id="streak">0</div>
-                <div class="label">Day Streak 🔥</div>
+                <div class="label">Day Streak</div>
             </div>
             <div class="stat-box">
                 <div class="number" id="total-logs">0</div>
@@ -85,14 +230,27 @@
 
         <!-- Log Progress -->
         <div class="card">
-            <h2>📝 Log Today's Progress</h2>
+            <h2>Log Today's Progress</h2>
+
+            <div class="photo-upload-zone" id="photo-upload-zone" onclick="document.getElementById('photo-input').click()">
+                <div id="photo-upload-placeholder">
+                    <div class="photo-upload-icon">📷</div>
+                    <div class="photo-upload-hint">Tap to add a progress photo (optional)</div>
+                </div>
+                <img id="photo-preview" style="display:none;"/>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event)"/>
+
             <div class="form-grid">
                 <div class="form-group">
                     <label>Weight (kg)</label>
                     <input type="number" id="weight" placeholder="70.5" step="0.1"/>
                 </div>
                 <div class="form-group">
-                    <label>Body Fat %</label>
+                    <div class="label-row">
+                        <label>Body Fat %</label>
+                        <button type="button" class="calc-link" onclick="openBfModal()">Don't know it? Calculate →</button>
+                    </div>
                     <input type="number" id="body-fat" placeholder="15" step="0.1"/>
                 </div>
                 <div class="form-group">
@@ -110,19 +268,25 @@
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="workout-done"/>
-                <label>Workout Completed ✅</label>
+                <label>Workout Completed</label>
             </div>
             <div class="form-group" style="margin-bottom:16px">
                 <label>Notes</label>
                 <textarea id="notes" placeholder="How did it feel? Any personal records?"></textarea>
             </div>
-            <button class="btn btn-primary" onclick="logProgress()">Save Progress 💪</button>
-            <p class="success" id="success-msg">✅ Progress saved successfully!</p>
+            <button class="btn btn-primary" id="save-btn" onclick="logProgress()">Save Progress</button>
+            <p class="success" id="success-msg">Progress saved successfully!</p>
+        </div>
+
+        <!-- Photo timeline -->
+        <div class="card" id="photo-timeline-card" style="display:none;">
+            <h2>Photo Timeline</h2>
+            <div class="photo-timeline" id="photo-timeline"></div>
         </div>
 
         <!-- History -->
         <div class="card">
-            <h2>📊 Progress History</h2>
+            <h2>Progress History</h2>
             <table>
                 <thead>
                     <tr>
@@ -134,37 +298,159 @@
                     </tr>
                 </thead>
                 <tbody id="history-table">
-                    <tr><td colspan="5" style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">Loading...</td></tr>
+                    <tr><td colspan="5" style="color:var(--text-low);text-align:center;padding:20px;">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <!-- Body Fat % Calculator Modal -->
+    <div class="bf-modal-overlay" id="bf-modal-overlay">
+        <div class="bf-modal">
+            <div class="bf-modal-top">
+                <h3>Calculate Body Fat %</h3>
+                <button class="bf-modal-close" onclick="closeBfModal()">✕</button>
+            </div>
+            <p class="bf-modal-sub">Pick whichever you can do right now. The tape method is more accurate; the quick estimate just needs numbers you already know.</p>
+
+            <div class="bf-tabs">
+                <button class="bf-tab active" id="bf-tab-navy" onclick="setBfMethod('navy')">📏 Tape Measure</button>
+                <button class="bf-tab" id="bf-tab-quick" onclick="setBfMethod('quick')">⚡ Quick Estimate</button>
+            </div>
+
+            <div class="bf-gender-row">
+                <button class="bf-gender-btn active" id="bf-gender-male" onclick="setBfGender('male')">Male</button>
+                <button class="bf-gender-btn" id="bf-gender-female" onclick="setBfGender('female')">Female</button>
+            </div>
+
+            <!-- Navy tape method fields -->
+            <div id="bf-navy-fields">
+                <div class="bf-field">
+                    <label>Height (cm)</label>
+                    <input type="number" id="bf-navy-height" placeholder="170"/>
+                </div>
+                <div class="bf-field">
+                    <label>Neck (cm)</label>
+                    <input type="number" id="bf-navy-neck" placeholder="38"/>
+                    <div class="bf-hint">Measure just below the Adam's apple</div>
+                </div>
+                <div class="bf-field">
+                    <label>Waist (cm)</label>
+                    <input type="number" id="bf-navy-waist" placeholder="82"/>
+                    <div class="bf-hint">Measure around the navel, after breathing out</div>
+                </div>
+                <div class="bf-field" id="bf-navy-hip-field" style="display:none;">
+                    <label>Hip (cm)</label>
+                    <input type="number" id="bf-navy-hip" placeholder="95"/>
+                    <div class="bf-hint">Measure at the widest point</div>
+                </div>
+            </div>
+
+            <!-- Quick BMI-based estimate fields -->
+            <div id="bf-quick-fields" style="display:none;">
+                <div class="bf-field">
+                    <label>Height (cm)</label>
+                    <input type="number" id="bf-quick-height" placeholder="170"/>
+                </div>
+                <div class="bf-field">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="bf-quick-weight" placeholder="70"/>
+                </div>
+                <div class="bf-field">
+                    <label>Age</label>
+                    <input type="number" id="bf-quick-age" placeholder="24"/>
+                </div>
+            </div>
+
+            <button class="bf-calc-btn" onclick="calculateBf()">Calculate</button>
+
+            <div class="bf-result" id="bf-result">
+                <div class="bf-num" id="bf-result-num">--%</div>
+                <div class="bf-label" id="bf-result-label">Estimated Body Fat</div>
+                <button class="bf-use-btn" onclick="useBfResult()">Use This Value</button>
+            </div>
+
+            <p class="bf-disclaimer">These are field-formula estimates, not a medical measurement — they can be off by a few percentage points. The tape method is generally the more reliable of the two without special equipment.</p>
+        </div>
+    </div>
+
     <script>
-        async function logProgress() {
-            const data = {
-                weight: parseFloat(document.getElementById('weight').value) || null,
-                body_fat: parseFloat(document.getElementById('body-fat').value) || null,
-                workout_name: document.getElementById('workout-name').value,
-                sets_completed: parseInt(document.getElementById('sets').value) || 0,
-                reps_completed: parseInt(document.getElementById('reps').value) || 0,
-                workout_completed: document.getElementById('workout-done').checked,
-                notes: document.getElementById('notes').value
+        let selectedPhotoBase64 = null;
+
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedPhotoBase64 = e.target.result;
+                const zone = document.getElementById('photo-upload-zone');
+                const placeholder = document.getElementById('photo-upload-placeholder');
+                const preview = document.getElementById('photo-preview');
+                zone.classList.add('has-photo');
+                placeholder.style.display = 'none';
+                preview.src = selectedPhotoBase64;
+                preview.style.display = 'block';
             };
+            reader.readAsDataURL(file);
+        }
 
-            const response = await fetch('/progress/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+        async function logProgress() {
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
 
-            const result = await response.json();
-            if (result.success) {
-                document.getElementById('success-msg').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('success-msg').style.display = 'none';
-                }, 3000);
-                loadHistory();
+            let photoUrl = null;
+
+            try {
+                // Upload photo first if one was selected
+                if (selectedPhotoBase64) {
+                    const photoResponse = await fetch('/progress/upload-photo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ photo: selectedPhotoBase64 })
+                    });
+                    const photoResult = await photoResponse.json();
+                    if (photoResult.success) {
+                        photoUrl = photoResult.photo_url;
+                    }
+                }
+
+                const data = {
+                    weight: parseFloat(document.getElementById('weight').value) || null,
+                    body_fat: parseFloat(document.getElementById('body-fat').value) || null,
+                    workout_name: document.getElementById('workout-name').value,
+                    sets_completed: parseInt(document.getElementById('sets').value) || 0,
+                    reps_completed: parseInt(document.getElementById('reps').value) || 0,
+                    workout_completed: document.getElementById('workout-done').checked,
+                    notes: document.getElementById('notes').value,
+                    photo_url: photoUrl
+                };
+
+                const response = await fetch('/progress/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('success-msg').style.display = 'block';
+                    setTimeout(() => { document.getElementById('success-msg').style.display = 'none'; }, 3000);
+
+                    // Reset photo picker
+                    selectedPhotoBase64 = null;
+                    document.getElementById('photo-upload-zone').classList.remove('has-photo');
+                    document.getElementById('photo-upload-placeholder').style.display = 'block';
+                    document.getElementById('photo-preview').style.display = 'none';
+                    document.getElementById('photo-input').value = '';
+
+                    loadHistory();
+                }
+            } catch (e) {
+                alert('Could not save progress. Please try again.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Progress';
             }
         }
 
@@ -172,7 +458,6 @@
             const response = await fetch('/progress/history');
             const history = await response.json();
 
-            // Update stats
             const workoutsDone = history.filter(h => h.workout_completed).length;
             const latestWeight = history.find(h => h.weight)?.weight || '--';
 
@@ -180,19 +465,32 @@
             document.getElementById('current-weight').textContent = latestWeight !== '--' ? latestWeight + ' kg' : '--';
             document.getElementById('total-logs').textContent = history.length;
 
-            // Calculate streak
             let streak = 0;
-            const today = new Date().toDateString();
             for (const log of history) {
                 if (log.workout_completed) streak++;
                 else break;
             }
             document.getElementById('streak').textContent = streak;
 
-            // Update table
+            // Photo timeline
+            const photosOnly = history.filter(h => h.photo_url);
+            const timelineCard = document.getElementById('photo-timeline-card');
+            const timeline = document.getElementById('photo-timeline');
+            if (photosOnly.length > 0) {
+                timelineCard.style.display = 'block';
+                timeline.innerHTML = photosOnly.map(h => `
+                    <div class="photo-timeline-item">
+                        <img src="${h.photo_url}" alt="Progress photo"/>
+                        <div class="photo-timeline-date">${new Date(h.created_at).toLocaleDateString()}</div>
+                    </div>
+                `).join('');
+            } else {
+                timelineCard.style.display = 'none';
+            }
+
             const table = document.getElementById('history-table');
             if (history.length === 0) {
-                table.innerHTML = '<tr><td colspan="5" style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">No progress logged yet. Start today! 💪</td></tr>';
+                table.innerHTML = '<tr><td colspan="5" style="color:var(--text-low);text-align:center;padding:20px;">No progress logged yet. Start today!</td></tr>';
                 return;
             }
 
@@ -201,13 +499,120 @@
                     <td>${new Date(h.created_at).toLocaleDateString()}</td>
                     <td>${h.weight ? h.weight + ' kg' : '--'}</td>
                     <td>${h.workout_name || '--'}</td>
-                    <td><span class="badge ${h.workout_completed ? 'badge-done' : 'badge-skip'}">${h.workout_completed ? '✅ Done' : '⏭️ Skipped'}</span></td>
-                    <td style="color:rgba(255,255,255,0.5)">${h.notes || '--'}</td>
+                    <td><span class="badge ${h.workout_completed ? 'badge-done' : 'badge-skip'}">${h.workout_completed ? 'Done' : 'Skipped'}</span></td>
+                    <td style="color:var(--text-mid)">${h.notes || '--'}</td>
                 </tr>
             `).join('');
         }
 
         loadHistory();
+
+        // ==================================================
+        // BODY FAT % CALCULATOR
+        // Two methods, same as mainstream fitness apps offer:
+        //   1) US Navy tape method (neck/waist/[hip]/height) — more accurate
+        //   2) Quick BMI-based estimate (Deurenberg formula) — no tape needed
+        // ==================================================
+        let bfMethod = 'navy';
+        let bfGender = 'male';
+
+        function openBfModal() {
+            document.getElementById('bf-modal-overlay').classList.add('open');
+        }
+        function closeBfModal() {
+            document.getElementById('bf-modal-overlay').classList.remove('open');
+        }
+        document.getElementById('bf-modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) closeBfModal();
+        });
+
+        function setBfMethod(method) {
+            bfMethod = method;
+            document.getElementById('bf-tab-navy').classList.toggle('active', method === 'navy');
+            document.getElementById('bf-tab-quick').classList.toggle('active', method === 'quick');
+            document.getElementById('bf-navy-fields').style.display = method === 'navy' ? 'block' : 'none';
+            document.getElementById('bf-quick-fields').style.display = method === 'quick' ? 'block' : 'none';
+            document.getElementById('bf-result').classList.remove('visible');
+        }
+
+        function setBfGender(gender) {
+            bfGender = gender;
+            document.getElementById('bf-gender-male').classList.toggle('active', gender === 'male');
+            document.getElementById('bf-gender-female').classList.toggle('active', gender === 'female');
+            // Hip measurement is only needed for the Navy formula on women
+            document.getElementById('bf-navy-hip-field').style.display = gender === 'female' ? 'block' : 'none';
+            document.getElementById('bf-result').classList.remove('visible');
+        }
+
+        function calculateBf() {
+            let result = null;
+
+            if (bfMethod === 'navy') {
+                const height = parseFloat(document.getElementById('bf-navy-height').value);
+                const neck = parseFloat(document.getElementById('bf-navy-neck').value);
+                const waist = parseFloat(document.getElementById('bf-navy-waist').value);
+                const hip = parseFloat(document.getElementById('bf-navy-hip').value);
+
+                if (!height || !neck || !waist || (bfGender === 'female' && !hip)) {
+                    alert('Please fill in all the measurements.');
+                    return;
+                }
+
+                if (bfGender === 'male') {
+                    if (waist <= neck) {
+                        alert('Waist measurement should be larger than neck measurement.');
+                        return;
+                    }
+                    result = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+                } else {
+                    if ((waist + hip) <= neck) {
+                        alert('Please double check your measurements.');
+                        return;
+                    }
+                    result = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(height)) - 450;
+                }
+            } else {
+                const height = parseFloat(document.getElementById('bf-quick-height').value);
+                const weight = parseFloat(document.getElementById('bf-quick-weight').value);
+                const age = parseFloat(document.getElementById('bf-quick-age').value);
+
+                if (!height || !weight || !age) {
+                    alert('Please fill in height, weight and age.');
+                    return;
+                }
+
+                const heightM = height / 100;
+                const bmi = weight / (heightM * heightM);
+                const sexFactor = bfGender === 'male' ? 1 : 0;
+                result = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
+            }
+
+            if (result === null || isNaN(result) || result < 2 || result > 60) {
+                alert('That result looks out of range — please double check your measurements.');
+                return;
+            }
+
+            const rounded = Math.round(result * 10) / 10;
+            document.getElementById('bf-result-num').textContent = rounded + '%';
+            document.getElementById('bf-result-label').textContent = bfMethod === 'navy' ? 'Estimated Body Fat (Navy Method)' : 'Estimated Body Fat (Quick Estimate)';
+            document.getElementById('bf-result').dataset.value = rounded;
+            document.getElementById('bf-result').classList.add('visible');
+        }
+
+        function useBfResult() {
+            const val = document.getElementById('bf-result').dataset.value;
+            if (val) {
+                document.getElementById('body-fat').value = val;
+            }
+            closeBfModal();
+        }
     </script>
+    <div class="bottom-nav">
+        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+        <a href="/exercises" class="nav-item"><span class="nav-icon">🏋️</span>Workout</a>
+        <a href="/diet" class="nav-item"><span class="nav-icon">🥗</span>Diet</a>
+        <a href="/progress" class="nav-item active"><span class="nav-icon">📊</span>Progress</a>
+        <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
+    </div>
 </body>
 </html>

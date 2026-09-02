@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Message
 import psycopg2
 import psycopg2.extras
+import secrets as pysecrets
 from database import get_db
 
 bcrypt = Bcrypt()
@@ -31,13 +32,15 @@ def register():
         return jsonify({'error': 'Invalid email address'}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    referral_code = pysecrets.token_hex(4)
+    referred_by = session.pop('referred_by', None)
 
     try:
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO users (username, email, password) VALUES (%s, %s, %s)',
-            (username, email, hashed_password)
+            'INSERT INTO users (username, email, password, referral_code, referred_by) VALUES (%s, %s, %s, %s, %s)',
+            (username, email, hashed_password, referral_code, referred_by)
         )
         conn.commit()
         cursor.close()
@@ -48,11 +51,11 @@ def register():
         try:
             from app import mail
             welcome_msg = Message(
-                subject="Welcome to FitBot! 💪",
+                subject="Welcome to Mentro! 💪",
                 recipients=[email],
                 html=f"""
                 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#000a1e;color:white;padding:30px;border-radius:16px;">
-                    <h1 style="color:#0078ff;text-align:center;">🏋️ Welcome to FitBot, {username}!</h1>
+                    <h1 style="color:#0078ff;text-align:center;">🏋️ Welcome to Mentro, {username}!</h1>
                     <p style="color:rgba(255,255,255,0.7);text-align:center;">Your free AI fitness coach is ready. Get personalized workout plans, diet advice, and progress tracking — all in one place.</p>
                     <div style="text-align:center;margin:30px 0;">
                         <a href="https://fitbot-402357265699.asia-south1.run.app" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Your First Workout 💪</a>

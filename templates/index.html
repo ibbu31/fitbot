@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FitBot - AI Fitness Coach</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <title>Mentro - AI Fitness Coach</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2KGPJJ2E3"></script>
     <script>
@@ -15,22 +15,86 @@
     </script>
 </head>
 <body>
-    <div class="bg-overlay"></div>
+
+    {% if not is_guest and not onboarded %}
+    <div class="quiz-overlay" id="quiz-overlay">
+        <div class="quiz-card">
+            <div class="quiz-progress">
+                <div class="quiz-dot active" data-step="1"></div>
+                <div class="quiz-dot" data-step="2"></div>
+                <div class="quiz-dot" data-step="3"></div>
+                <div class="quiz-dot" data-step="4"></div>
+            </div>
+
+            <div class="quiz-step active" data-step="1">
+                <div class="quiz-icon">🎯</div>
+                <h2>What's your goal?</h2>
+                <p class="quiz-sub">This shapes every plan Mentro builds for you</p>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-value="weight loss" onclick="selectQuizOption(this,'goal')">🔥 Weight Loss</button>
+                    <button class="quiz-option" data-value="muscle gain" onclick="selectQuizOption(this,'goal')">💪 Muscle Gain</button>
+                    <button class="quiz-option" data-value="endurance" onclick="selectQuizOption(this,'goal')">🏃 Endurance</button>
+                    <button class="quiz-option" data-value="general fitness" onclick="selectQuizOption(this,'goal')">✨ General Fitness</button>
+                </div>
+            </div>
+
+            <div class="quiz-step" data-step="2">
+                <div class="quiz-icon">📊</div>
+                <h2>What's your level?</h2>
+                <p class="quiz-sub">Be honest — plans adjust automatically as you improve</p>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-value="beginner" onclick="selectQuizOption(this,'level')">🌱 Beginner</button>
+                    <button class="quiz-option" data-value="intermediate" onclick="selectQuizOption(this,'level')">⚡ Intermediate</button>
+                    <button class="quiz-option" data-value="advanced" onclick="selectQuizOption(this,'level')">🔥 Advanced</button>
+                </div>
+            </div>
+
+            <div class="quiz-step" data-step="3">
+                <div class="quiz-icon">🏋️</div>
+                <h2>What equipment do you have?</h2>
+                <p class="quiz-sub">Mentro only suggests exercises you can actually do</p>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-value="full gym" onclick="selectQuizOption(this,'equipment')">🏋️ Full Gym</button>
+                    <button class="quiz-option" data-value="home equipment" onclick="selectQuizOption(this,'equipment')">🏠 Home Equipment</button>
+                    <button class="quiz-option" data-value="no equipment" onclick="selectQuizOption(this,'equipment')">🤸 No Equipment</button>
+                </div>
+            </div>
+
+            <div class="quiz-step" data-step="4">
+                <div class="quiz-icon">🩹</div>
+                <h2>Any injuries or pain?</h2>
+                <p class="quiz-sub">Mentro will suggest safe alternatives automatically</p>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-value="none" onclick="selectQuizOption(this,'injuries')">✅ None</button>
+                    <button class="quiz-option" data-value="knee" onclick="selectQuizOption(this,'injuries')">🦵 Knee</button>
+                    <button class="quiz-option" data-value="back" onclick="selectQuizOption(this,'injuries')">🔙 Back</button>
+                    <button class="quiz-option" data-value="shoulder" onclick="selectQuizOption(this,'injuries')">💪 Shoulder</button>
+                </div>
+            </div>
+
+            <button class="quiz-back" id="quiz-back-btn" onclick="quizBack()" style="display:none;">← Back</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- .bg-overlay div removed: it duplicated the ambient orange glow
+         already set on the body background in style.css, which was
+         contributing to the muddy/shaded look on mobile. -->
     <div class="main-wrapper">
 
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <div class="logo-icon">F</div>
+                <div class="logo-icon">M</div>
                 <div class="logo-text">
-                    <h1>FitBot</h1>
+                    <h1>Mentro</h1>
                     <p>AI Fitness Coach</p>
                 </div>
             </div>
             <div class="user-info">
                 {% if is_guest %}
                     <a href="/login" class="nav-btn">🔑 Login</a>
-                    <a href="/register" class="logout-btn" style="background:#0078ff;color:white;border-color:#0078ff;">Sign Up Free</a>
+                    <a href="/register" class="logout-btn" style="background:var(--accent-gradient);color:white;border-color:transparent;">Sign Up Free</a>
                 {% else %}
                     <div class="user-avatar">{{ username[0].upper() }}</div>
                     <span class="username">{{ username }}</span>
@@ -43,8 +107,8 @@
 
         <!-- Hero -->
         <div class="hero">
-            <h2>Your Personal <span>AI Trainer</span></h2>
-            <p>Get personalized workout plans, diet tips and fitness advice — completely free</p>
+            <h2>Your Progress <span>Should Be Predictable</span></h2>
+            <p>AI-driven coaching that adjusts your plan in real time — free, forever</p>
             <div class="hero-stats">
                 <div class="stat">
                     <span class="stat-number">100%</span>
@@ -63,35 +127,97 @@
             </div>
         </div>
 
+        {% if is_guest %}
+        <div class="phone-mockup-wrap">
+            <div class="phone-mockup">
+                <div class="phone-notch"></div>
+                <div class="phone-statusbar">
+                    <span>9:41</span>
+                    <span class="phone-statusbar-icons">●●●</span>
+                </div>
+                <div class="phone-screen">
+                    <div class="phone-chat-header">
+                        <div class="phone-avatar-dot"></div>
+                        <span>Mentro is online</span>
+                    </div>
+                    <div class="phone-bubble phone-bubble-bot">
+                        Based on your last session, let's push to 3×15 today.
+                    </div>
+                    <div class="phone-bubble phone-bubble-user">
+                        Let's go 💪
+                    </div>
+                    <div class="phone-bubble phone-bubble-bot phone-bubble-typing">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="phone-input-bar">Ask about workouts, diet...</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if is_guest %}
+        <div class="hero-feature-grid">
+            <div class="hero-feature-card">
+                <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80" alt="Personalized training"/>
+                <div class="hero-feature-text">
+                    <h3>Know Exactly What to Do</h3>
+                    <p>Workouts built from your logged history. No guessing sets, reps, or progress.</p>
+                </div>
+            </div>
+            <div class="hero-feature-card">
+                <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80" alt="Flexible training"/>
+                <div class="hero-feature-text">
+                    <h3>Trains Around Your Life</h3>
+                    <p>Quick sessions that adapt to your schedule and whatever equipment you have.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Guest bar OR Streak bar -->
         {% if is_guest %}
         <div class="guest-bar" id="guest-bar">
-            <span>🎁 Try FitBot free — <strong id="msgs-left">5</strong> free messages left</span>
+            <span>🎁 Try Mentro free — <strong id="msgs-left">5</strong> free messages left</span>
             <a href="/register" class="guest-signup-btn">Sign Up for Unlimited 💪</a>
         </div>
         {% else %}
-        <div class="streak-bar" id="streak-bar">
-            <div class="streak-item">
-                <span class="streak-icon">🔥</span>
-                <span class="streak-value" id="streak-count">0</span>
-                <span class="streak-label">Day Streak</span>
+        <div class="rings-dashboard" id="streak-bar">
+            <div class="ring-item">
+                <svg class="ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress ring-streak" id="ring-streak" cx="50" cy="50" r="42"/>
+                </svg>
+                <div class="ring-center">
+                    <span class="ring-value" id="streak-count">0</span>
+                    <span class="ring-unit">days</span>
+                </div>
+                <span class="ring-label">Streak</span>
             </div>
-            <div class="streak-divider"></div>
-            <div class="streak-item">
-                <span class="streak-icon">📅</span>
-                <span class="streak-value" id="day-number">1</span>
-                <span class="streak-label">Day of Journey</span>
+            <div class="ring-item">
+                <svg class="ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress ring-weekly" id="ring-weekly" cx="50" cy="50" r="42"/>
+                </svg>
+                <div class="ring-center">
+                    <span class="ring-value" id="weekly-count">0</span>
+                    <span class="ring-unit">/ 4</span>
+                </div>
+                <span class="ring-label">This Week</span>
             </div>
-            <div class="streak-divider"></div>
-            <div class="streak-item">
-                <span class="streak-icon">💪</span>
-                <span class="streak-value" id="total-workouts">0</span>
-                <span class="streak-label">Workouts Done</span>
+            <div class="ring-item">
+                <svg class="ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress ring-total" id="ring-total" cx="50" cy="50" r="42"/>
+                </svg>
+                <div class="ring-center">
+                    <span class="ring-value" id="total-workouts">0</span>
+                    <span class="ring-unit">total</span>
+                </div>
+                <span class="ring-label">Workouts</span>
             </div>
-            <div class="streak-divider"></div>
-            <div class="streak-item" onclick="window.location.href='/progress'" style="cursor:pointer;">
-                <span class="streak-icon">➕</span>
-                <span class="streak-label" style="color:#0078ff;">Log Today</span>
+            <div class="ring-item ring-log-item" onclick="window.location.href='/progress'">
+                <div class="ring-log-btn">➕</div>
+                <span class="ring-label">Log Today</span>
             </div>
         </div>
         {% endif %}
@@ -101,7 +227,7 @@
             <div class="chat-header">
                 <div class="chat-header-left">
                     <div class="online-dot"></div>
-                    <span>FitBot is online</span>
+                    <span>Mentro is online</span>
                 </div>
                 <div class="chat-header-right">
                     <select id="lang-select" class="lang-select">
@@ -113,15 +239,15 @@
 
             <div class="chat-box" id="chat-box">
                 <div class="message bot-message">
-                    <div class="bot-avatar">F</div>
+                    <div class="bot-avatar">M</div>
                     <div class="message-content">
                         {% if is_guest %}
-                            👋 Hey! I am FitBot, your FREE AI fitness coach!<br><br>
+                            👋 Hey! I am Mentro, your FREE AI fitness coach!<br><br>
                             Ask me anything about workouts, diet, or fitness —
                             <strong>no signup needed</strong> to try! 💪
                         {% else %}
                             👋 Welcome back <strong>{{ username }}</strong>!
-                            I am FitBot, your personal AI fitness coach.<br><br>
+                            I am Mentro, your personal AI fitness coach.<br><br>
                             Type your question, speak 🎤, or show me a photo 📸!
                         {% endif %}
                     </div>
@@ -129,15 +255,17 @@
             </div>
 
             <!-- Image Preview -->
-            <div id="image-preview-container" style="display:none;padding:10px 16px;background:rgba(0,120,255,0.03);border-top:1px solid rgba(0,120,255,0.1);">
+            <div id="image-preview-container" style="display:none;padding:10px 16px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);">
                 <img id="image-preview" style="max-width:150px;border-radius:8px;"/>
-                <button onclick="clearImage()" style="margin-left:10px;background:#0078ff;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button>
+                <button onclick="clearImage()" style="margin-left:10px;background:var(--accent-gradient);color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button>
             </div>
 
             <!-- PDF bar - only for logged in users -->
             {% if not is_guest %}
             <div class="pdf-bar">
-                <button onclick="downloadPDF()" class="pdf-btn">📄 Download Plan as PDF</button>
+                <div class="pdf-card" id="pdf-card">
+                    <button onclick="downloadPDF()" class="pdf-btn" id="pdf-btn">Download Plan as PDF</button>
+                </div>
             </div>
             {% endif %}
 
@@ -176,13 +304,25 @@
             </div>
         </div>
 
+        {% if not is_guest %}
+        <div class="referral-box">
+            <div class="referral-text">
+                <strong>Share Mentro, help a friend get fit 💪</strong>
+                <span id="referral-link-display">fitbot-402357265699.asia-south1.run.app/r/{{ referral_code }}</span>
+            </div>
+            <button class="referral-copy-btn" onclick="copyReferralLink()">Copy Link</button>
+        </div>
+
+        <button class="waitlist-btn" id="waitlist-btn" onclick="joinWaitlist()">⭐ Get Premium (Coming Soon)</button>
+        {% endif %}
+
     </div>
 
     <!-- Signup Popup Modal -->
     <div class="signup-modal" id="signup-modal">
         <div class="signup-modal-content">
             <div class="signup-modal-icon">🏋️</div>
-            <h2>You're loving FitBot! 🔥</h2>
+            <h2>You're loving Mentro! 🔥</h2>
             <p>Sign up free to unlock:</p>
             <div class="signup-features">
                 <div class="signup-feature">✅ Unlimited AI conversations</div>
@@ -218,6 +358,14 @@
             }
         }
     </script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>    {% if not is_guest %}
+    <div class="bottom-nav">
+        <a href="/" class="nav-item active"><span class="nav-icon">🏠</span>Home</a>
+        <a href="/exercises" class="nav-item"><span class="nav-icon">🏋️</span>Workout</a>
+        <a href="/diet" class="nav-item"><span class="nav-icon">🥗</span>Diet</a>
+        <a href="/progress" class="nav-item"><span class="nav-icon">📊</span>Progress</a>
+        <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
+    </div>
+    {% endif %}
 </body>
 </html>
