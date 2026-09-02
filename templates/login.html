@@ -16,8 +16,10 @@
             --text-hi: #ffffff;
             --text-mid: rgba(255, 255, 255, 0.6);
             --text-low: rgba(255, 255, 255, 0.38);
-            --border-soft: rgba(255, 90, 31, 0.16);
-            --border-strong: rgba(255, 90, 31, 0.4);
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --accent-border-soft: rgba(255, 90, 31, 0.16);
+            --accent-border-strong: rgba(255, 90, 31, 0.4);
         }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
         body {
@@ -26,22 +28,18 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background:
-                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79, 107, 255, 0.16), transparent 60%),
-                radial-gradient(ellipse 700px 500px at 100% 10%, rgba(139, 92, 246, 0.12), transparent 55%),
-                var(--bg-base);
+            background: var(--bg-base);
         }
         .card {
             position: relative;
             z-index: 1;
-            background: rgba(19, 26, 43, 0.92);
-            backdrop-filter: blur(20px);
+            background: var(--bg-surface);
             border: 1px solid var(--border-soft);
             border-radius: 24px;
             padding: 42px 38px;
             width: 100%;
             max-width: 420px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
             animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes cardEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
@@ -54,7 +52,7 @@
             display: flex; align-items: center; justify-content: center;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.6rem; font-weight: 700; color: white;
-            box-shadow: 0 8px 30px rgba(79, 107, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(255, 90, 31, 0.35);
         }
         .logo { text-align: center; margin-bottom: 8px; }
         .logo h1 { font-family: 'Space Grotesk', sans-serif; color: var(--text-hi); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; }
@@ -78,7 +76,7 @@
             transition: all 0.2s;
             font-family: 'Inter', sans-serif;
         }
-        input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(79, 107, 255, 0.15); }
+        input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.15); }
         input::placeholder { color: var(--text-low); }
 
         button {
@@ -91,9 +89,9 @@
             cursor: pointer;
             margin-top: 6px;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 8px 26px rgba(79, 107, 255, 0.35);
+            box-shadow: 0 8px 26px rgba(255, 90, 31, 0.3);
         }
-        button:hover { transform: scale(1.02); box-shadow: 0 10px 34px rgba(79, 107, 255, 0.5); }
+        button:hover { transform: scale(1.02); box-shadow: 0 10px 34px rgba(255, 90, 31, 0.42); }
         button:active { transform: scale(0.98); }
 
         .error { color: #ff6b6b; font-size: 0.85rem; margin-top: 14px; text-align: center; display: none; }

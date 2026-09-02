@@ -384,13 +384,13 @@ def generate_pdf():
 
         # Styles
         title_style = ParagraphStyle('Title', fontSize=24,
-            textColor=colors.HexColor('#0078ff'),
+            textColor=colors.HexColor('#FF5A1F'),
             fontName='Helvetica-Bold', spaceAfter=4, alignment=TA_CENTER)
         subtitle_style = ParagraphStyle('Subtitle', fontSize=11,
             textColor=colors.HexColor('#888888'),
             fontName='Helvetica', spaceAfter=20, alignment=TA_CENTER)
         section_style = ParagraphStyle('Section', fontSize=14,
-            textColor=colors.HexColor('#0078ff'),
+            textColor=colors.HexColor('#FF5A1F'),
             fontName='Helvetica-Bold', spaceAfter=8, spaceBefore=16)
         body_style = ParagraphStyle('Body', fontSize=10,
             textColor=colors.HexColor('#333333'),
@@ -400,7 +400,7 @@ def generate_pdf():
             fontName='Helvetica', leading=16, spaceAfter=3,
             leftIndent=16, bulletIndent=6)
 
-        BLUE = colors.HexColor('#0078ff')
+        BRAND_ORANGE = colors.HexColor('#FF5A1F')
         LIGHT = colors.HexColor('#f0f6ff')
         WHITE = colors.white
 
@@ -426,7 +426,7 @@ def generate_pdf():
 
             table = Table(table_data, colWidths=[90*mm, 25*mm, 35*mm, 25*mm])
             table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), BLUE),
+                ('BACKGROUND', (0,0), (-1,0), BRAND_ORANGE),
                 ('TEXTCOLOR', (0,0), (-1,0), WHITE),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0,0), (-1,-1), 10),
@@ -470,7 +470,7 @@ def generate_pdf():
                 # Detect headings (bold lines or lines with emojis at start)
                 elif len(line) < 60 and (line.isupper() or any(ord(c) > 127 for c in line[:3])):
                     story.append(Paragraph(line, ParagraphStyle('h',
-                        fontSize=11, textColor=colors.HexColor('#0078ff'),
+                        fontSize=11, textColor=colors.HexColor('#FF5A1F'),
                         fontName='Helvetica-Bold', spaceAfter=4, spaceBefore=8)))
                 else:
                     story.append(Paragraph(line, body_style))
@@ -537,11 +537,11 @@ def forgot_password():
             recipients=[email],
             html=f"""
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:white;padding:30px;border-radius:16px;">
-                <h1 style="color:#0078ff;text-align:center;">Mentro</h1>
+                <h1 style="color:#FF5A1F;text-align:center;">Mentro</h1>
                 <h2 style="text-align:center;">Reset Your Password</h2>
                 <p style="color:rgba(255,255,255,0.7);text-align:center;">Click the button below to reset your password. This link expires in 1 hour.</p>
                 <div style="text-align:center;margin:30px 0;">
-                    <a href="{reset_url}" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Reset Password</a>
+                    <a href="{reset_url}" style="background:linear-gradient(135deg,#FF5A1F,#FF7A47);color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Reset Password</a>
                 </div>
                 <p style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.85rem;">If you did not request this, ignore this email.</p>
             </div>
@@ -920,11 +920,11 @@ def send_reminders():
                     recipients=[user['email']],
                     html=f"""
                     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#000a1e;color:white;padding:30px;border-radius:16px;">
-                        <h1 style="color:#0078ff;text-align:center;">🏋️ Mentro</h1>
+                        <h1 style="color:#FF5A1F;text-align:center;">🏋️ Mentro</h1>
                         <h2 style="text-align:center;">Hey {user['username']}! Don't break your streak! 🔥</h2>
                         <p style="color:rgba(255,255,255,0.7);text-align:center;">You haven't logged your workout today. Your fitness journey is waiting!</p>
                         <div style="text-align:center;margin:30px 0;">
-                            <a href="https://fitbot-402357265699.asia-south1.run.app" style="background:#0078ff;color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Today's Workout 💪</a>
+                            <a href="https://fitbot-402357265699.asia-south1.run.app" style="background:linear-gradient(135deg,#FF5A1F,#FF7A47);color:white;padding:14px 32px;border-radius:25px;text-decoration:none;font-weight:bold;">Start Today's Workout 💪</a>
                         </div>
                         <p style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.85rem;">Small steps every day lead to big results!</p>
                     </div>
