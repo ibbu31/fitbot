@@ -165,7 +165,13 @@ def login_required(f):
 @app.after_request
 def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
+    # SAMEORIGIN alone blocks GoDaddy's masked forwarding, since mentro.fit and
+    # this Cloud Run domain are technically different origins from the browser's
+    # perspective. Content-Security-Policy's frame-ancestors is the modern,
+    # correctly-supported way to explicitly allow just mentro.fit to frame this
+    # site, while still blocking every other domain from doing the same.
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://mentro.fit https://www.mentro.fit"
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
