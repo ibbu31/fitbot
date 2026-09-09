@@ -6,11 +6,15 @@
     <title>Mentro - Exercise Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; min-width:0; }
+    html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    img, svg, video { max-width: 100%; height: auto; }
         body {
             background: #0a0a0a;
-            min-height: 100vh;
+            min-height: 100dvh;
             color: #ffffff;
+            overflow-x: hidden;
+            max-width: 100vw;
             }
         body::before {
             content: '';
@@ -22,7 +26,7 @@
         }
         .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .header h1 { font-size: 1.5rem; font-weight: 900; }
+        .header h1 { font-size: clamp(1.2rem, 4vw + 0.5rem, 1.5rem); font-weight: 900; }
         .header h1 span { color: #FF5A1F; }
         .back-btn { padding: 8px 16px; background: transparent; border: 1px solid #FF5A1F; color: #FF5A1F; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; }
         .back-btn:hover { background: #FF5A1F; color: #ffffff; }
@@ -104,8 +108,8 @@
         .diff-advanced { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 
         .card-info { padding: 14px; }
-        .card-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
-        .card-desc { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 10px; }
+        .card-name { font-size: clamp(0.85rem, 2vw + 0.5rem, 0.95rem); font-weight: 700; margin-bottom: 4px; }
+        .card-desc { font-size: clamp(0.72rem, 1.5vw + 0.5rem, 0.78rem); color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 10px; }
         .card-stats { display: flex; gap: 12px; margin-bottom: 10px; }
         .card-stat { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
         .card-stat span { color: #FF5A1F; font-weight: 600; }
@@ -114,11 +118,11 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.open { display: flex; }
-        .modal { background: #141414; border: 1px solid rgba(255,90,31,0.3); border-radius: 20px; padding: 28px; max-width: 560px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal { background: #141414; border: 1px solid rgba(255,90,31,0.3); border-radius: 20px; padding: clamp(18px, 5vw, 28px); max-width: 560px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 1.4rem; cursor: pointer; }
         .modal-close:hover { color: #ffffff; }
         .modal-anim { height: 220px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; position: relative; }
-        .modal-name { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+        .modal-name { font-size: clamp(1.05rem, 3.5vw + 0.5rem, 1.3rem); font-weight: 900; margin-bottom: 6px; }
         .modal-tags { display: flex; gap: 8px; margin-bottom: 14px; }
         .modal-desc { color: rgba(255,255,255,0.6); font-size: 0.85rem; line-height: 1.6; margin-bottom: 18px; }
         .steps-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #FF5A1F; margin-bottom: 12px; }
