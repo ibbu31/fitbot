@@ -25,6 +25,7 @@
     html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     img, svg, video { max-width: 100%; height: auto; }
         body {
+            min-height: 100vh;
             min-height: 100dvh;
             overflow-x: hidden;
             max-width: 100vw;
@@ -188,5 +189,32 @@
         }
         function handleKey(event) { if (event.key === 'Enter') register(); }
     </script>
+<script>
+(function () {
+    function clampOverflow() {
+        var docWidth = document.documentElement.clientWidth;
+        if (!docWidth) return;
+        var all = document.body.querySelectorAll('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (el.scrollWidth > docWidth + 2) {
+                el.style.maxWidth = '100%';
+                el.style.boxSizing = 'border-box';
+                if (window.getComputedStyle(el).overflowX === 'visible') {
+                    el.style.overflowX = 'hidden';
+                }
+            }
+        }
+        if (document.documentElement.scrollWidth > docWidth + 2) {
+            document.documentElement.style.overflowX = 'hidden';
+            document.body.style.overflowX = 'hidden';
+        }
+    }
+    window.addEventListener('load', clampOverflow);
+    window.addEventListener('resize', clampOverflow);
+    window.addEventListener('orientationchange', function () { setTimeout(clampOverflow, 300); });
+    if (document.readyState === 'complete') clampOverflow();
+})();
+</script>
 </body>
 </html>
