@@ -359,7 +359,7 @@
         }
     </script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script src="{{ url_for('static', filename='responsive-fix.js') }}"></script>
+    <script src="{{ url_for('static', filename='responsive-fix.js', v=2) }}"></script>
     {% if not is_guest %}
     <div class="bottom-nav">
         <a href="/" class="nav-item active"><span class="nav-icon">🏠</span>Home</a>
