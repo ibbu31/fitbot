@@ -83,7 +83,7 @@ chatBox.innerHTML += `<div class="typing" id="typing"><div class="typing-dot"></
         chatBox.innerHTML += `
             <div class="message bot-message">
                 <div class="bot-avatar">M</div>
-                <div class="message-content">❌ Something went wrong. Please try again!</div>
+                <div class="message-content">Something went wrong. Please try again.</div>
             </div>`;
     });
 }
@@ -125,11 +125,13 @@ function sendQuickMessage(message) {
 function formatMessage(text) {
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    text = text.replace(/^[•\-]\s(.+)/gm, '<li>$1</li>');
-    text = text.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, function(match) {
-        return '<ul style="padding-left:16px;margin:6px 0;">' + match + '</ul>';
-    });
-    text = text.replace(/^\d+\.\s(.+)/gm, '<li>$1</li>');
+    // Bullet lines become a <ul>, numbered lines an <ol>. Newlines inside a
+    // list are dropped so items sit tight instead of gaining <br> gaps.
+    text = text.replace(/^[•\-]\s(.+)$/gm, '<li>$1</li>');
+    text = text.replace(/(?:<li>.*?<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>');
+    text = text.replace(/^\d+\.\s(.+)$/gm, '<oli>$1</oli>');
+    text = text.replace(/(?:<oli>.*?<\/oli>\n?)+/g, m => '<ol>' + m.replace(/\n/g, '').replace(/<oli>/g, '<li>').replace(/<\/oli>/g, '</li>') + '</ol>');
+    text = text.replace(/\n*(<\/?(?:ul|ol)>)\n*/g, '$1');
     text = text.replace(/\n\n/g, '<br><br>');
     text = text.replace(/\n/g, '<br>');
     return text;
@@ -156,22 +158,18 @@ function startVoice() {
     try {
         recognition.start();
         micBtn.classList.add('recording');
-        micBtn.innerText = '🔴';
     } catch(e) { console.error(e); }
     recognition.onresult = function(event) {
         const transcript = event.results[0][0].transcript;
         document.getElementById('user-input').value = transcript;
         micBtn.classList.remove('recording');
-        micBtn.innerText = '🎤';
         sendMessage();
     };
     recognition.onerror = function() {
         micBtn.classList.remove('recording');
-        micBtn.innerText = '🎤';
     };
     recognition.onend = function() {
         micBtn.classList.remove('recording');
-        micBtn.innerText = '🎤';
     };
 }
 
@@ -182,16 +180,9 @@ function toggleVoice() {
     if (IS_GUEST) { showSignupPopup(); return; }
     voiceEnabled = !voiceEnabled;
     const btn = document.getElementById('voice-toggle-btn');
-    if (voiceEnabled) {
-        btn.innerText = '🔊';
-        btn.style.background = 'rgba(255,90,31,0.25)';
-        btn.style.borderColor = '#FF5A1F';
-    } else {
-        window.speechSynthesis.cancel();
-        btn.innerText = '🔇';
-        btn.style.background = '';
-        btn.style.borderColor = '';
-    }
+    btn.classList.toggle('on', voiceEnabled);
+    btn.setAttribute('aria-pressed', voiceEnabled ? 'true' : 'false');
+    if (!voiceEnabled) window.speechSynthesis.cancel();
 }
 function speakText(text) {
     const selectedLang = document.getElementById('lang-select').value;
@@ -440,18 +431,38 @@ function submitOnboarding() {
 // ==================
 // REFERRAL LINK
 // ==================
-function copyReferralLink() {
+const COPY_ICON  = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+const CHECK_ICON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+
+function getReferralLink() {
     const linkEl = document.getElementById('referral-link-display');
-    if (!linkEl) return;
-    const fullLink = 'https://' + linkEl.textContent.trim();
+    return linkEl ? 'https://' + linkEl.textContent.trim() : '';
+}
+
+function copyReferralLink() {
+    const fullLink = getReferralLink();
+    if (!fullLink) return;
+    const btn = document.querySelector('.invite-copy');
     navigator.clipboard.writeText(fullLink).then(() => {
-        const btn = document.querySelector('.referral-copy-btn');
-        const original = btn.textContent;
-        btn.textContent = 'Copied! ✓';
-        setTimeout(() => { btn.textContent = original; }, 1800);
+        if (!btn) return;
+        btn.classList.add('copied');
+        btn.innerHTML = CHECK_ICON;
+        setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = COPY_ICON; }, 1800);
     }).catch(() => {
         alert('Copy this link: ' + fullLink);
     });
+}
+
+function shareReferral() {
+    const fullLink = getReferralLink();
+    if (!fullLink) return;
+    const text = "I'm training with Mentro, an AI fitness coach. Join with my link:";
+    if (navigator.share) {
+        // Native share sheet on phones (WhatsApp, Instagram, etc.)
+        navigator.share({ title: 'Mentro', text: text, url: fullLink }).catch(() => {});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + fullLink), '_blank');
+    }
 }
 
 // ==================
@@ -463,7 +474,7 @@ function joinWaitlist() {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                btn.textContent = "✅ You're on the list!";
+                btn.textContent = "You're on the list";
                 btn.disabled = true;
             }
         })

@@ -1,3 +1,49 @@
+{%- macro icon(name, cls='') -%}
+<svg class="i{% if cls %} {{ cls }}{% endif %}" viewBox="0 0 24 24" aria-hidden="true">
+{%- if name == 'home' %}<path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V19a1.5 1.5 0 0 0 1.5 1.5h3v-5.5h4v5.5h3a1.5 1.5 0 0 0 1.5-1.5V9.5"/>
+{%- elif name == 'dumbbell' %}<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>
+{%- elif name == 'utensils' %}<path d="M5 3v6a2.5 2.5 0 0 0 5 0V3M7.5 3v18"/><path d="M17 21V3c-2.4 1.3-3.5 3.8-3.5 6.5V13H17"/>
+{%- elif name == 'trend' %}<path d="m3.5 17 6-6 4 4 7-7.5"/><path d="M15 7.5h5.5V13"/>
+{%- elif name == 'user' %}<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-3.8 3.4-6.5 7.5-6.5s7.5 2.7 7.5 6.5"/>
+{%- elif name == 'plus' %}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'camera' %}<path d="M4 8h3l1.8-2.5h6.4L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>
+{%- elif name == 'mic' %}<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3"/>
+{%- elif name == 'vol' %}<path d="M11 5 6.5 9H3.5v6h3L11 19V5z"/><path d="M15 9a4 4 0 0 1 0 6M17.8 6.2a8 8 0 0 1 0 11.6"/>
+{%- elif name == 'volx' %}<path d="M11 5 6.5 9H3.5v6h3L11 19V5z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/>
+{%- elif name == 'send' %}<path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/>
+{%- elif name == 'copy' %}<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>
+{%- elif name == 'check' %}<path d="m5 12.5 4.5 4.5L19 7"/>
+{%- elif name == 'share' %}<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.3 10.8 7.4-4M8.3 13.2l7.4 4"/>
+{%- elif name == 'users' %}<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c0-3.4 2.9-5.8 6.5-5.8s6.5 2.4 6.5 5.8"/><path d="M16.2 5a3.5 3.5 0 0 1 0 7M18.5 14.6c1.9.8 3 2.6 3 5.4"/>
+{%- elif name == 'lock' %}<rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+{%- elif name == 'grid' %}<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>
+{%- elif name == 'star' %}<path d="m12 3.5 2.5 5.3 5.8.8-4.2 4.1 1 5.8L12 16.7 6.9 19.5l1-5.8-4.2-4.1 5.8-.8L12 3.5z"/>
+{%- elif name == 'file' %}<path d="M7 3.5h6.5L19 9v10.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V9H19"/>
+{%- elif name == 'chev' %}<path d="m6 9.5 6 6 6-6"/>
+{%- endif %}</svg>
+{%- endmacro -%}
+
+{%- macro brand_glyph() -%}
+<svg class="brand-glyph" viewBox="14 14 72 72" aria-hidden="true"><path d="M 25 72 L 25 35 L 50 58 L 75 25 L 75 72" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="25" r="6.5" fill="#fff"/></svg>
+{%- endmacro -%}
+
+{%- macro quick_actions(is_guest) -%}
+<section class="quick-actions" aria-label="Quick actions">
+    <button type="button" class="qa-card" onclick="sendQuickMessage('Give me a personalized workout plan')">
+        <span class="qa-icon">{{ icon('dumbbell') }}</span><span class="qa-label">Workout plan</span>
+    </button>
+    <button type="button" class="qa-card" onclick="sendQuickMessage('Give me a diet and nutrition plan')">
+        <span class="qa-icon">{{ icon('utensils') }}</span><span class="qa-label">Diet plan</span>
+    </button>
+    <button type="button" class="qa-card" onclick="handleExercisesClick()">
+        <span class="qa-icon">{{ icon('grid') }}</span><span class="qa-label">Exercises</span>{% if is_guest %}{{ icon('lock', 'qa-lock') }}{% endif %}
+    </button>
+    <button type="button" class="qa-card" onclick="handleVoiceClick()">
+        <span class="qa-icon">{{ icon('mic') }}</span><span class="qa-label">Voice</span>{% if is_guest %}{{ icon('lock', 'qa-lock') }}{% endif %}
+    </button>
+</section>
+{%- endmacro -%}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,9 +60,9 @@
         gtag('config', 'G-T2KGPJJ2E3');
     </script>
 </head>
-<body>
+<body class="{% if not is_guest %}has-nav{% endif %}">
 
-    {% if not is_guest and not onboarded %}
+{% if not is_guest and not onboarded %}
     <div class="quiz-overlay" id="quiz-overlay">
         <div class="quiz-card">
             <div class="quiz-progress">
@@ -77,57 +123,36 @@
     </div>
     {% endif %}
 
-    <!-- .bg-overlay div removed: it duplicated the ambient orange glow
-         already set on the body background in style.css, which was
-         contributing to the muddy/shaded look on mobile. -->
     <div class="main-wrapper">
 
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">M</div>
-                <div class="logo-text">
-                    <h1>Mentro</h1>
-                    <p>AI Fitness Coach</p>
-                </div>
-            </div>
-            <div class="user-info">
+        <header class="app-header">
+            <a class="brand" href="/" aria-label="Mentro home">
+                <span class="brand-mark">{{ brand_glyph() }}</span>
+                <span class="brand-text"><span class="brand-name">Mentro</span><span class="brand-tag">AI fitness coach</span></span>
+            </a>
+            <div class="header-actions">
                 {% if is_guest %}
-                    <a href="/login" class="nav-btn">🔑 Login</a>
-                    <a href="/register" class="logout-btn" style="background:var(--accent-gradient);color:white;border-color:transparent;">Sign Up Free</a>
+                <a href="/login" class="btn-sm ghost">Log in</a>
+                <a href="/register" class="btn-sm primary">Sign up</a>
                 {% else %}
-                    <div class="user-avatar">{{ username[0].upper() }}</div>
-                    <span class="username">{{ username }}</span>
-                    <a href="/exercises" class="nav-btn">🏋️ Exercises</a>
-                    <a href="/progress" class="nav-btn">📊 Progress</a>
-                    <a href="/logout" class="logout-btn">Logout</a>
+                <span class="avatar" aria-hidden="true">{{ username[0].upper() }}</span>
+                <a href="/logout" class="btn-sm ghost">Log out</a>
                 {% endif %}
             </div>
-        </div>
-
-        <!-- Hero -->
-        <div class="hero">
-            <h2>Your Progress <span>Should Be Predictable</span></h2>
-            <p>AI-driven coaching that adjusts your plan in real time — free, forever</p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">Free</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">24/7</span>
-                    <span class="stat-label">Available</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">AI</span>
-                    <span class="stat-label">Powered</span>
-                </div>
-            </div>
-        </div>
+        </header>
 
         {% if is_guest %}
+        <section class="hero">
+            <h2>Your Progress <span>Should Be Predictable</span></h2>
+            <p>AI coaching that adjusts your plan from your real logged workouts.</p>
+            <div class="trust-row">
+                <span class="trust-item">{{ icon('check') }}Free to start</span>
+                <span class="trust-item">{{ icon('check') }}English &amp; Hindi</span>
+                <span class="trust-item">{{ icon('check') }}No card needed</span>
+            </div>
+        </section>
+
+{% if is_guest %}
         <div class="phone-mockup-wrap">
             <div class="phone-mockup">
                 <div class="phone-notch"></div>
@@ -144,7 +169,7 @@
                         Based on your last session, let's push to 3×15 today.
                     </div>
                     <div class="phone-bubble phone-bubble-user">
-                        Let's go 💪
+                        Let's go
                     </div>
                     <div class="phone-bubble phone-bubble-bot phone-bubble-typing">
                         <span></span><span></span><span></span>
@@ -174,66 +199,67 @@
         </div>
         {% endif %}
 
-        <!-- Guest bar OR Streak bar -->
-        {% if is_guest %}
         <div class="guest-bar" id="guest-bar">
-            <span>🎁 Try Mentro free — <strong id="msgs-left">5</strong> free messages left</span>
-            <a href="/register" class="guest-signup-btn">Sign Up for Unlimited 💪</a>
+            <span>Try Mentro free · <strong id="msgs-left">5</strong> messages left</span>
+            <a href="/register" class="btn-sm primary">Sign up for unlimited</a>
         </div>
         {% else %}
-        <div class="rings-dashboard" id="streak-bar">
+        <section class="greeting">
+            <p class="eyebrow">Today</p>
+            <h2>Hey, {{ username }}</h2>
+            <p>Log today's session to keep your streak alive.</p>
+        </section>
+
+        <section class="rings-dashboard" id="streak-bar" aria-label="Your progress">
             <div class="ring-item">
-                <svg class="ring-svg" viewBox="0 0 100 100">
+                <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
                     <circle class="ring-track" cx="50" cy="50" r="42"/>
-                    <circle class="ring-progress ring-streak" id="ring-streak" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress" id="ring-streak" cx="50" cy="50" r="42"/>
                 </svg>
-                <div class="ring-center">
-                    <span class="ring-value" id="streak-count">0</span>
-                    <span class="ring-unit">days</span>
-                </div>
+                <div class="ring-center"><span class="ring-value" id="streak-count">0</span><span class="ring-unit">days</span></div>
                 <span class="ring-label">Streak</span>
             </div>
             <div class="ring-item">
-                <svg class="ring-svg" viewBox="0 0 100 100">
+                <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
                     <circle class="ring-track" cx="50" cy="50" r="42"/>
-                    <circle class="ring-progress ring-weekly" id="ring-weekly" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress" id="ring-weekly" cx="50" cy="50" r="42"/>
                 </svg>
-                <div class="ring-center">
-                    <span class="ring-value" id="weekly-count">0</span>
-                    <span class="ring-unit">/ 4</span>
-                </div>
-                <span class="ring-label">This Week</span>
+                <div class="ring-center"><span class="ring-value" id="weekly-count">0</span><span class="ring-unit">/ 4</span></div>
+                <span class="ring-label">This week</span>
             </div>
             <div class="ring-item">
-                <svg class="ring-svg" viewBox="0 0 100 100">
+                <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
                     <circle class="ring-track" cx="50" cy="50" r="42"/>
-                    <circle class="ring-progress ring-total" id="ring-total" cx="50" cy="50" r="42"/>
+                    <circle class="ring-progress" id="ring-total" cx="50" cy="50" r="42"/>
                 </svg>
-                <div class="ring-center">
-                    <span class="ring-value" id="total-workouts">0</span>
-                    <span class="ring-unit">total</span>
-                </div>
+                <div class="ring-center"><span class="ring-value" id="total-workouts">0</span><span class="ring-unit">total</span></div>
                 <span class="ring-label">Workouts</span>
             </div>
-            <div class="ring-item ring-log-item" onclick="window.location.href='/progress'">
-                <div class="ring-log-btn">➕</div>
-                <span class="ring-label">Log Today</span>
-            </div>
-        </div>
+            <a class="ring-item ring-log-item" href="/progress">
+                <span class="ring-log-btn">{{ icon('plus') }}</span>
+                <span class="ring-label">Log today</span>
+            </a>
+        </section>
+
+        {{ quick_actions(is_guest) }}
         {% endif %}
 
-        <!-- Chat Container -->
-        <div class="chat-container">
-            <div class="chat-header">
-                <div class="chat-header-left">
-                    <div class="online-dot"></div>
-                    <span>Mentro is online</span>
-                </div>
-                <div class="chat-header-right">
-                    <select id="lang-select" class="lang-select">
-                        <option value="en-US">🇬🇧 English</option>
-                        <option value="hi-IN">🇮🇳 Hindi</option>
-                    </select>
+        <section class="chat-card">
+            <div class="chat-head">
+                <div class="chat-status"><span class="online-dot"></span><span>Mentro</span><span class="chat-status-sub">online</span></div>
+                <div class="head-tools">
+                    {% if not is_guest %}
+                    <button type="button" class="icon-toggle" id="voice-toggle-btn" onclick="toggleVoice()" aria-label="Read replies aloud" aria-pressed="false" title="Read replies aloud">
+                        <span class="ico-off">{{ icon('volx') }}</span><span class="ico-on">{{ icon('vol') }}</span>
+                    </button>
+                    {% endif %}
+                    <div class="select-wrap">
+                        <select id="lang-select" class="lang-select" aria-label="Language">
+                            <option value="en-US">English</option>
+                            <option value="hi-IN">हिन्दी</option>
+                        </select>
+                        {{ icon('chev') }}
+                    </div>
                 </div>
             </div>
 
@@ -242,99 +268,88 @@
                     <div class="bot-avatar">M</div>
                     <div class="message-content">
                         {% if is_guest %}
-                            👋 Hey! I am Mentro, your FREE AI fitness coach!<br><br>
-                            Ask me anything about workouts, diet, or fitness —
-                            <strong>no signup needed</strong> to try! 💪
+                            Hi, I'm Mentro, your AI fitness coach. Ask me anything about workouts, diet or fitness — <strong>no signup needed</strong> to try.
                         {% else %}
-                            👋 Welcome back <strong>{{ username }}</strong>!
-                            I am Mentro, your personal AI fitness coach.<br><br>
-                            Type your question, speak 🎤, or show me a photo 📸!
+                            Welcome back, <strong>{{ username }}</strong>. I'm Mentro. Ask about training, nutrition or recovery, or send a photo of your meal or your form.
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Image Preview -->
-            <div id="image-preview-container" style="display:none;padding:10px 16px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);">
-                <img id="image-preview" style="max-width:150px;border-radius:8px;"/>
-                <button onclick="clearImage()" style="margin-left:10px;background:var(--accent-gradient);color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button>
+            <div id="image-preview-container" class="image-preview" style="display:none;">
+                <img id="image-preview" alt="Selected photo"/>
+                <button type="button" class="btn-sm ghost" onclick="clearImage()">Remove</button>
             </div>
 
-            <!-- PDF bar - only for logged in users -->
             {% if not is_guest %}
             <div class="pdf-bar">
                 <div class="pdf-card" id="pdf-card">
-                    <button onclick="downloadPDF()" class="pdf-btn" id="pdf-btn">Download Plan as PDF</button>
+                    <button type="button" onclick="downloadPDF()" class="pdf-btn" id="pdf-btn">{{ icon('file') }}Save plan as PDF</button>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Input Area -->
             <div class="input-area">
-                {% if not is_guest %}
-                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)"/>
-                <button class="icon-btn" onclick="document.getElementById('camera-input').click()" title="Send Photo">📸</button>
-                {% endif %}
-                <input type="text" id="user-input" placeholder="Ask me about workouts, diet, fitness..." onkeypress="handleKey(event)"/>
-                {% if not is_guest %}
-                <button class="icon-btn" onclick="startVoice()" id="mic-btn" title="Voice Input">🎤</button>
-                <button class="icon-btn" onclick="toggleVoice()" id="voice-toggle-btn" title="Voice OFF">🔇</button>
-                {% endif %}
-                <button class="send-btn" onclick="sendMessage()">Send 💪</button>
+                <div class="input-pill">
+                    {% if not is_guest %}
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" hidden onchange="handleImage(event)"/>
+                    <button type="button" class="pill-btn" onclick="document.getElementById('camera-input').click()" aria-label="Send a photo">{{ icon('camera') }}</button>
+                    {% endif %}
+                    <input type="text" id="user-input" placeholder="Message Mentro" onkeypress="handleKey(event)" autocomplete="off" enterkeyhint="send"/>
+                    {% if not is_guest %}
+                    <button type="button" class="pill-btn" onclick="startVoice()" id="mic-btn" aria-label="Voice input">{{ icon('mic') }}</button>
+                    {% endif %}
+                </div>
+                <button type="button" class="send-btn" onclick="sendMessage()" aria-label="Send">{{ icon('send') }}</button>
             </div>
-        </div>
+        </section>
 
-        <!-- Features Row -->
-        <div class="features">
-            <div class="feature-card" onclick="sendQuickMessage('Give me a personalized workout plan')">
-                <span class="feature-icon">🏋️</span>
-                <span>Workout Plans</span>
+        {% if is_guest %}
+        {{ quick_actions(is_guest) }}
+        {% else %}
+        <section class="invite-card">
+            <div class="invite-head">
+                <span class="invite-icon">{{ icon('users') }}</span>
+                <div>
+                    <div class="invite-title">Invite a friend</div>
+                    <div class="invite-sub">Know someone who wants to get fit? Share your link.</div>
+                </div>
             </div>
-            <div class="feature-card" onclick="sendQuickMessage('Give me a diet and nutrition plan')">
-                <span class="feature-icon">🥗</span>
-                <span>Diet & Nutrition</span>
+            <div class="invite-link">
+                <span id="referral-link-display">mentro.fit/r/{{ referral_code }}</span>
+                <button type="button" class="invite-copy" onclick="copyReferralLink()" aria-label="Copy link">{{ icon('copy') }}</button>
             </div>
-            <div class="feature-card" onclick="handleExercisesClick()">
-                <span class="feature-icon">🎬</span>
-                <span>Exercises {% if is_guest %}🔒{% endif %}</span>
-            </div>
-            <div class="feature-card" onclick="handleVoiceClick()">
-                <span class="feature-icon">🎤</span>
-                <span>Voice {% if is_guest %}🔒{% endif %}</span>
-            </div>
-        </div>
+            <button type="button" class="invite-share" onclick="shareReferral()">{{ icon('share') }}Share your link</button>
+        </section>
 
-        {% if not is_guest %}
-        <div class="referral-box">
-            <div class="referral-text">
-                <strong>Share Mentro, help a friend get fit 💪</strong>
-                <span id="referral-link-display">fitbot-402357265699.asia-south1.run.app/r/{{ referral_code }}</span>
+        <div class="premium-row">
+            {{ icon('star') }}
+            <div class="premium-text">
+                <div class="premium-title">Mentro Premium</div>
+                <div class="premium-sub">Coming soon. Get early access.</div>
             </div>
-            <button class="referral-copy-btn" onclick="copyReferralLink()">Copy Link</button>
+            <button type="button" class="waitlist-btn" id="waitlist-btn" onclick="joinWaitlist()">Join waitlist</button>
         </div>
-
-        <button class="waitlist-btn" id="waitlist-btn" onclick="joinWaitlist()">⭐ Get Premium (Coming Soon)</button>
         {% endif %}
 
     </div>
 
-    <!-- Signup Popup Modal -->
     <div class="signup-modal" id="signup-modal">
         <div class="signup-modal-content">
-            <div class="signup-modal-icon">🏋️</div>
-            <h2>You're loving Mentro! 🔥</h2>
-            <p>Sign up free to unlock:</p>
+            <div class="signup-modal-icon">{{ brand_glyph() }}</div>
+            <h2>Enjoying Mentro?</h2>
+            <p>Create a free account to unlock:</p>
             <div class="signup-features">
-                <div class="signup-feature">✅ Unlimited AI conversations</div>
-                <div class="signup-feature">✅ Save your workout history</div>
-                <div class="signup-feature">✅ Voice input in Hindi & English</div>
-                <div class="signup-feature">✅ Exercise library with guides</div>
-                <div class="signup-feature">✅ Progress tracking & streaks</div>
-                <div class="signup-feature">✅ Download workout plans as PDF</div>
+                <div class="signup-feature">Unlimited AI conversations</div>
+                <div class="signup-feature">Your workout history, saved</div>
+                <div class="signup-feature">Voice input in Hindi &amp; English</div>
+                <div class="signup-feature">Exercise library with guides</div>
+                <div class="signup-feature">Progress tracking &amp; streaks</div>
+                <div class="signup-feature">Download plans as PDF</div>
             </div>
-            <a href="/register" class="signup-modal-btn">Create Free Account 💪</a>
-            <a href="/login" class="signup-modal-login">Already have an account? Login</a>
-            <button onclick="closeSignupPopup()" class="signup-modal-close">Maybe later</button>
+            <a href="/register" class="signup-modal-btn">Create free account</a>
+            <a href="/login" class="signup-modal-login">Already have an account? Log in</a>
+            <button type="button" onclick="closeSignupPopup()" class="signup-modal-close">Maybe later</button>
         </div>
     </div>
 
@@ -361,13 +376,13 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="{{ url_for('static', filename='responsive-fix.js', v=2) }}"></script>
     {% if not is_guest %}
-    <div class="bottom-nav">
-        <a href="/" class="nav-item active"><span class="nav-icon">🏠</span>Home</a>
-        <a href="/exercises" class="nav-item"><span class="nav-icon">🏋️</span>Workout</a>
-        <a href="/diet" class="nav-item"><span class="nav-icon">🥗</span>Diet</a>
-        <a href="/progress" class="nav-item"><span class="nav-icon">📊</span>Progress</a>
-        <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
-    </div>
+    <nav class="bottom-nav" aria-label="Main">
+        <a href="/" class="nav-item active">{{ icon('home') }}<span>Home</span></a>
+        <a href="/exercises" class="nav-item">{{ icon('dumbbell') }}<span>Workout</span></a>
+        <a href="/diet" class="nav-item">{{ icon('utensils') }}<span>Diet</span></a>
+        <a href="/progress" class="nav-item">{{ icon('trend') }}<span>Progress</span></a>
+        <a href="/progress" class="nav-item">{{ icon('user') }}<span>Profile</span></a>
+    </nav>
     {% endif %}
 </body>
 </html>

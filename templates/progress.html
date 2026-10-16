@@ -199,10 +199,10 @@
         .bf-use-btn:hover { background: var(--accent-gradient); border-color: transparent; color: white; }
         .bf-disclaimer { color: var(--text-low); font-size: 0.66rem; margin-top: 12px; line-height: 1.5; text-align: center; }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 860px; background: var(--bg-surface); border-top: 1px solid var(--border-soft); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 24px rgba(0,0,0,0.35); border-radius: 24px 24px 0 0; z-index: 500; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-low); font-size: 0.62rem; font-weight: 600; text-decoration: none; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 860px; background: var(--bg-surface); border-top: 1px solid var(--border-soft); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 24px rgba(0,0,0,0.35); border-radius: 24px 24px 0 0; z-index: 500; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-low); font-size: 0.68rem; font-weight: 600; text-decoration: none; }
         .nav-item.active { color: var(--accent-1); }
-        .nav-icon { font-size: 1.05rem; }
+        .nav-item .i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
         body { padding-bottom: 90px; }
     </style>
 </head>
@@ -612,13 +612,13 @@
             closeBfModal();
         }
     </script>
-    <div class="bottom-nav">
-        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
-        <a href="/exercises" class="nav-item"><span class="nav-icon">🏋️</span>Workout</a>
-        <a href="/diet" class="nav-item"><span class="nav-icon">🥗</span>Diet</a>
-        <a href="/progress" class="nav-item active"><span class="nav-icon">📊</span>Progress</a>
-        <a href="/progress" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
-    </div>
+    <nav class="bottom-nav" aria-label="Main">
+        <a href="/" class="nav-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V19a1.5 1.5 0 0 0 1.5 1.5h3v-5.5h4v5.5h3a1.5 1.5 0 0 0 1.5-1.5V9.5"/></svg><span>Home</span></a>
+        <a href="/exercises" class="nav-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg><span>Workout</span></a>
+        <a href="/diet" class="nav-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v6a2.5 2.5 0 0 0 5 0V3M7.5 3v18"/><path d="M17 21V3c-2.4 1.3-3.5 3.8-3.5 6.5V13H17"/></svg><span>Diet</span></a>
+        <a href="/progress" class="nav-item active"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 17 6-6 4 4 7-7.5"/><path d="M15 7.5h5.5V13"/></svg><span>Progress</span></a>
+        <a href="/progress" class="nav-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-3.8 3.4-6.5 7.5-6.5s7.5 2.7 7.5 6.5"/></svg><span>Profile</span></a>
+    </nav>
 <script>
 (function () {
     function clampOverflow() {
