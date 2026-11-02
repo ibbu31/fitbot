@@ -13,6 +13,9 @@ import psycopg2.extras
 import google.generativeai as genai
 import bleach
 import os
+import re
+import json
+import hmac
 import time
 import secrets
 import requests
@@ -27,7 +30,7 @@ app.secret_key = os.getenv("SECRET_KEY", "fitbot-secret-key")
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+app.config['PERMANENT_SESSION_LIFETIME'] = 30 * 24 * 3600  # stay logged in; 1 hour hurt day-7 retention
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -41,7 +44,36 @@ mail = Mail(app)
 
 Talisman(app, force_https=False, session_cookie_secure=False, content_security_policy=False)
 
-limiter = Limiter(app=app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
+
+GUEST_CHAT_LIMIT = "60 per hour"
+USER_CHAT_LIMIT = "120 per hour"
+
+def get_client_ip():
+    """Real visitor IP.
+
+    Behind Cloudflare -> Cloud Run, request.remote_addr is a proxy address, so the rate
+    limiter used to see every visitor as the same person. The Cloudflare Worker now
+    forwards the visitor's IP in X-Mentro-Client-IP. Once PROXY_SHARED_SECRET is set on
+    both Cloud Run and the Worker, a matching X-Mentro-Proxy-Key is required, so nobody
+    hitting the raw Cloud Run URL can fake the header.
+    """
+    forwarded = request.headers.get('X-Mentro-Client-IP', '').strip()
+    if forwarded:
+        secret = os.getenv('PROXY_SHARED_SECRET')
+        sent_key = request.headers.get('X-Mentro-Proxy-Key', '')
+        if not secret or hmac.compare_digest(sent_key.encode('utf-8'), secret.encode('utf-8')):
+            return forwarded[:64]
+    xff = request.headers.get('X-Forwarded-For', '')
+    if xff:
+        return xff.split(',')[-1].strip()[:64]  # last hop is added by Google's own front end
+    return request.remote_addr or '127.0.0.1'
+
+def rate_limit_key():
+    """Signed-in users are limited per account, guests per real visitor IP."""
+    uid = session.get('user_id')
+    return f"user:{uid}" if uid else f"ip:{get_client_ip()}"
+
+limiter = Limiter(app=app, key_func=rate_limit_key, default_limits=["2000 per day", "300 per hour"])
 
 bcrypt.init_app(app)
 app.register_blueprint(auth)
@@ -57,7 +89,8 @@ with app.app_context():
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+# gemini-1.5-flash was retired by Google; the "-latest" alias always points at the current Flash model.
+gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-flash-latest"))
 
 SYSTEM_PROMPT = """You are Mentro, an experienced personal trainer and nutritionist with 10 years of coaching experience. You are knowledgeable, direct, and genuinely invested in the user's results — like a real coach, not a cheerleader.
 
@@ -191,10 +224,21 @@ def home():
             cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute('SELECT onboarded, referral_code FROM users WHERE id = %s', (session['user_id'],))
             row = cursor.fetchone()
+            onboarded = bool(row['onboarded']) if row else False
+            referral_code = (row.get('referral_code') or '') if row else ''
+            # Accounts created before referral codes existed have none, which made their
+            # invite link a dead "/r/". Give them a code the first time they open the app.
+            if row and not referral_code:
+                try:
+                    new_code = secrets.token_hex(4)
+                    cursor.execute('UPDATE users SET referral_code = %s WHERE id = %s', (new_code, session['user_id']))
+                    conn.commit()
+                    referral_code = new_code
+                except Exception as e:
+                    conn.rollback()
+                    print(f"Referral code backfill error: {e}")
             cursor.close()
             conn.close()
-            onboarded = bool(row['onboarded']) if row else False
-            referral_code = row.get('referral_code') or '' if row else ''
         except Exception as e:
             print(f"Onboarded check error: {e}")
             onboarded = True  # fail safe — don't block chat access if this check breaks
@@ -206,6 +250,7 @@ def home():
         referral_code=referral_code)
 @app.route("/chat", methods=["POST"])
 @limiter.limit("20 per minute")
+@limiter.limit(lambda: USER_CHAT_LIMIT if session.get('user_id') else GUEST_CHAT_LIMIT)
 def chat():
     user_message = sanitize_input(request.json.get("message", ""))
     user_language = request.json.get("language", "en-US")
@@ -679,7 +724,10 @@ def upload_progress_photo():
 
 @app.route("/r/<code>")
 def referral_landing(code):
-    session['referred_by'] = code
+    # keep only plain letters/digits so a crafted link can't stuff odd data into the session
+    clean = ''.join(ch for ch in code if ch.isalnum())[:32]
+    if clean:
+        session['referred_by'] = clean
     return redirect(url_for('auth.register'))
 
 @app.route("/api/join-waitlist", methods=["POST"])
@@ -709,24 +757,9 @@ def diet_page():
         print(f"Diet page error: {e}")
         return f"<h1>Error loading diet plan: {str(e)}</h1>", 500
 
-@app.route("/api/generate-diet", methods=["POST"])
-@login_required
-def generate_diet():
-    user_id = session['user_id']
-    try:
-        conn = get_db()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('SELECT fitness_goal, fitness_level FROM users WHERE id = %s', (user_id,))
-        profile = cursor.fetchone()
-        cursor.close()
-        conn.close()
+DIET_PROMPT = """Generate a one-day Indian-friendly diet plan for someone whose fitness goal is {goal} and level is {level}.
 
-        goal = (profile.get('fitness_goal') if profile else None) or 'general fitness'
-        level = (profile.get('fitness_level') if profile else None) or 'beginner'
-
-        diet_prompt = f"""Generate a one-day Indian-friendly diet plan for someone whose fitness goal is {goal} and level is {level}.
-
-Respond with ONLY valid JSON, no other text, in exactly this format:
+Respond with ONLY valid JSON, no other text and no markdown, in exactly this format:
 {{
   "calories": 1850,
   "protein_g": 120,
@@ -739,28 +772,81 @@ Respond with ONLY valid JSON, no other text, in exactly this format:
   ]
 }}"""
 
+def _whole_number(value, default=0):
+    try:
+        return int(round(float(value)))
+    except (TypeError, ValueError):
+        return default
+
+def parse_diet_json(raw):
+    """Turn raw model text into a clean diet dict, or None if it isn't usable."""
+    if not raw:
+        return None
+    match = re.search(r'\{[\s\S]*\}', raw)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group())
+    except ValueError:
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get('meals'), list):
+        return None
+    meals = []
+    for meal in data['meals'][:6]:
+        if isinstance(meal, dict) and meal.get('name'):
+            meals.append({'name': str(meal['name'])[:120], 'calories': _whole_number(meal.get('calories'))})
+    diet = {key: _whole_number(data.get(key)) for key in ('calories', 'protein_g', 'carbs_g', 'fats_g')}
+    if not meals or diet['calories'] <= 0:
+        return None
+    diet['meals'] = meals
+    return diet
+
+def diet_text_from_groq(prompt):
+    # gpt-oss is a reasoning model: its "thinking" tokens count against max_tokens, so the old
+    # cap of 400 often left nothing for the actual answer. Low effort + a roomy cap fixes that.
+    for extra in ({"reasoning_effort": "low"}, {}):
         try:
-            response = client.chat.completions.create(
+            resp = client.chat.completions.create(
                 model="openai/gpt-oss-120b",
-                messages=[{"role": "user", "content": diet_prompt}],
-                max_tokens=400
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                extra_body=extra,
             )
-            raw = response.choices[0].message.content
-        except Exception:
-            raw = call_gemini([{"role": "user", "content": diet_prompt}], "")
+            return resp.choices[0].message.content
+        except Exception as e:
+            print(f"Diet Groq error (extra={extra}): {e}")
+    return None
 
-        import json as jsonlib
-        import re as relib
-        json_match = relib.search(r'\{[\s\S]*\}', raw)
-        if json_match:
-            diet_data = jsonlib.loads(json_match.group())
-            return jsonify({'success': True, 'diet': diet_data})
-        else:
-            raise ValueError("Could not parse diet plan")
+def diet_text_from_gemini(prompt):
+    return call_gemini([{"role": "user", "content": prompt}], "")
 
+@app.route("/api/generate-diet", methods=["POST"])
+@login_required
+def generate_diet():
+    user_id = session['user_id']
+    goal, level = 'general fitness', 'beginner'
+    try:
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute('SELECT fitness_goal, fitness_level FROM users WHERE id = %s', (user_id,))
+        profile = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if profile:
+            goal = profile.get('fitness_goal') or goal
+            level = profile.get('fitness_level') or level
     except Exception as e:
-        print(f"Diet generation error: {e}")
-        return jsonify({'error': 'Could not generate diet plan. Please try again.'}), 500
+        print(f"Diet profile lookup error: {e}")  # not fatal: fall back to a general plan
+
+    prompt = DIET_PROMPT.format(goal=goal, level=level)
+    for source in (diet_text_from_groq, diet_text_from_gemini):
+        raw = source(prompt)
+        diet = parse_diet_json(raw)
+        if diet:
+            return jsonify({'success': True, 'diet': diet})
+        print(f"Diet plan: {source.__name__} gave nothing usable. Raw start: {str(raw)[:200]!r}")
+
+    return jsonify({'error': 'Our AI coach is busy right now. Please try again in a minute.'}), 503
 
 @app.route("/generate-workout", methods=["POST"])
 @login_required

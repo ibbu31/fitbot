@@ -68,6 +68,7 @@
     .meal-name { font-size: 0.86rem; font-weight: 600; }
     .meal-cal { font-size: 0.76rem; color: var(--text-mid); white-space: nowrap; }
 
+    .diet-error { display: none; margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: rgba(255,100,100,0.08); border: 1px solid rgba(255,100,100,0.25); color: #ff9a9a; font-size: 0.84rem; line-height: 1.45; }
     .empty-state { text-align: center; padding: 30px 20px; color: var(--text-mid); font-size: 0.85rem; }
 
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto; max-width: 480px; background: var(--bg-card); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 18px; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); border-radius: 24px 24px 0 0; }
@@ -87,6 +88,8 @@
         <p>Get a personalized one-day meal plan based on your goal</p>
         <button class="generate-btn" id="generate-btn" onclick="generateDiet()">Generate My Plan</button>
     </div>
+
+    <p class="diet-error" id="diet-error" role="alert"></p>
 
     <div class="diet-card" id="macro-card">
         <div class="diet-card-top">
@@ -120,12 +123,25 @@ async function generateDiet() {
     const btn = document.getElementById('generate-btn');
     btn.disabled = true;
     btn.textContent = 'Generating...';
+    showDietError('');
 
     try {
         const response = await fetch('/api/generate-diet', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-        const result = await response.json();
 
-        if (result.success) {
+        // Logged out while the page was open: the server answers with the login page, not JSON
+        if (response.redirected && response.url.indexOf('/login') !== -1) {
+            window.location.href = '/login';
+            return;
+        }
+        if (response.status === 429) {
+            showDietError('Too many requests. Please wait a minute and try again.');
+            return;
+        }
+
+        let result = null;
+        try { result = await response.json(); } catch (e) { /* reply wasn't JSON */ }
+
+        if (response.ok && result && result.success) {
             const diet = result.diet;
             document.getElementById('total-kcal').textContent = diet.calories + ' kcal';
             document.getElementById('protein-val').textContent = diet.protein_g + 'g';
@@ -143,14 +159,20 @@ async function generateDiet() {
             document.getElementById('meals-card').classList.add('visible');
             document.getElementById('empty-state').style.display = 'none';
         } else {
-            alert(result.error || 'Could not generate diet plan.');
+            showDietError((result && result.error) || 'Could not generate your plan. Please try again.');
         }
     } catch (e) {
-        alert('Something went wrong. Please try again.');
+        showDietError('Connection problem. Check your internet and try again.');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Generate My Plan';
     }
+}
+
+function showDietError(message) {
+    const box = document.getElementById('diet-error');
+    box.textContent = message;
+    box.style.display = message ? 'block' : 'none';
 }
 </script>
 <script>

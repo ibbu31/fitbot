@@ -274,6 +274,23 @@
                         {% endif %}
                     </div>
                 </div>
+
+                <div class="chat-suggestions" id="chat-suggestions">
+                    <p class="suggest-label">Try asking</p>
+                    <div class="suggest-row">
+                        {% if is_guest %}
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Build me a beginner workout plan')">Beginner workout plan</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Give me high-protein Indian vegetarian meal ideas')">High-protein meals</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('How do I lose belly fat?')">Lose belly fat</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Give me a 20-minute workout I can do at home')">20-min home workout</button>
+                        {% else %}
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Plan my workouts for this week based on my profile')">Plan my week</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Give me high-protein Indian vegetarian meal ideas')">High-protein meals</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('My progress has stalled. What should I change?')">I&#39;m stuck, help</button>
+                        <button type="button" class="suggest-chip" onclick="sendQuickMessage('Give me a 20-minute workout I can do at home')">20-min home workout</button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
             <div id="image-preview-container" class="image-preview" style="display:none;">
@@ -307,6 +324,7 @@
         {% if is_guest %}
         {{ quick_actions(is_guest) }}
         {% else %}
+        {% if referral_code %}
         <section class="invite-card">
             <div class="invite-head">
                 <span class="invite-icon">{{ icon('users') }}</span>
@@ -321,6 +339,7 @@
             </div>
             <button type="button" class="invite-share" onclick="shareReferral()">{{ icon('share') }}Share your link</button>
         </section>
+        {% endif %}
 
         <div class="premium-row">
             {{ icon('star') }}

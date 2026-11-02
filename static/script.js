@@ -23,6 +23,9 @@ function sendMessage() {
         updateGuestCounter();
     }
 
+    const suggestions = document.getElementById('chat-suggestions');
+    if (suggestions) suggestions.remove();
+
     if (message) {
         chatBox.innerHTML += `
             <div class="message user-message">
@@ -43,6 +46,7 @@ function sendMessage() {
     input.value = '';
     clearImage();
 chatBox.innerHTML += `<div class="typing" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     const selectedLang = document.getElementById('lang-select') ?
         document.getElementById('lang-select').value : 'en-US';
